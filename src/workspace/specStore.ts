@@ -16,6 +16,7 @@ import {
   SpecType,
 } from '../specs/phase';
 import { parseTasks, progress } from '../specs/tasks';
+import { isFileNotFound } from './edits';
 import { resolveSpecFolder } from './resolve';
 
 export interface SpecDocInfo {
@@ -58,6 +59,9 @@ export class SpecStore implements vscode.Disposable {
       vscode.workspace.onDidChangeTextDocument((e) => {
         if (this.isTracked(e.document.uri)) this.scheduleFire();
       }),
+      vscode.workspace.onDidCloseTextDocument((d) => {
+        if (this.isTracked(d.uri)) this.scheduleFire();
+      }),
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
         this.createWatchers();
         this.scheduleFire();
@@ -72,7 +76,8 @@ export class SpecStore implements vscode.Disposable {
   }
 
   get specsFolder(): string {
-    return vscode.workspace.getConfiguration('sddStudio').get<string>('specsFolder', 'specs').replace(/^\/+|\/+$/g, '');
+    const value = vscode.workspace.getConfiguration('sddStudio').get<string>('specsFolder', 'specs').replace(/^\/+|\/+$/g, '');
+    return value === '' || value.split('/').includes('..') ? 'specs' : value;
   }
 
   folders(): readonly vscode.WorkspaceFolder[] {
@@ -88,6 +93,7 @@ export class SpecStore implements vscode.Disposable {
   }
 
   dirUri(folder: vscode.WorkspaceFolder, name: string): vscode.Uri {
+    if (!isValidSpecName(name)) throw new SpecError('INVALID_NAME', `Nombre de spec no válido: "${name}".`);
     return vscode.Uri.joinPath(folder.uri, ...this.specsFolder.split('/'), name);
   }
 
@@ -105,8 +111,9 @@ export class SpecStore implements vscode.Disposable {
     if (dirty) return dirty.getText();
     try {
       return new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
-    } catch {
-      return undefined;
+    } catch (e) {
+      if (isFileNotFound(e)) return undefined;
+      throw e;
     }
   }
 
@@ -216,7 +223,7 @@ export class SpecStore implements vscode.Disposable {
 
   private createWatchers(): void {
     this.watchers.forEach((w) => w.dispose());
-    this.watchers = [`**/${this.specsFolder}/**/*.md`, `**/${STEERING_DIR.join('/')}/*.md`].map((pattern) => {
+    this.watchers = [`**/${this.specsFolder}/**`, `**/${STEERING_DIR.join('/')}/*.md`].map((pattern) => {
       const watcher = vscode.workspace.createFileSystemWatcher(pattern);
       watcher.onDidCreate(() => this.scheduleFire());
       watcher.onDidChange(() => this.scheduleFire());

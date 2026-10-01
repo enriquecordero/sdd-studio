@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { SpecError } from '../../src/specs/errors';
 import { getApi, restoreFixture, ws, wsUri } from './helpers';
 
 describe('SpecStore', () => {
@@ -41,5 +42,10 @@ describe('SpecStore', () => {
     await editor.edit((e) => e.insert(new vscode.Position(doc.lineCount, 0), 'EXTRA\n'));
     assert.ok((await store.readText(uri))!.includes('EXTRA'));
     await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+  });
+
+  it('dirUri rechaza nombres que escapan de specs/', async () => {
+    const { store } = await getApi();
+    assert.throws(() => store.dirUri(ws(), '../x'), (e: unknown) => (e as SpecError).name === 'SpecError' && (e as SpecError).code === 'INVALID_NAME');
   });
 });

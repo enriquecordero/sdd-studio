@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 
+export function isFileNotFound(e: unknown): boolean {
+  return e instanceof vscode.FileSystemError && e.code === 'FileNotFound';
+}
+
 /**
  * Aplica fn al texto actual del archivo.
  * - Si está abierto en VS Code: edita el buffer (respeta deshacer). Solo guarda si no tenía cambios sin guardar.
@@ -22,7 +26,8 @@ export async function transformFile(uri: vscode.Uri, fn: (current: string | unde
   let current: string | undefined;
   try {
     current = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
-  } catch {
+  } catch (e) {
+    if (!isFileNotFound(e)) throw e;
     current = undefined;
   }
   const next = fn(current);
