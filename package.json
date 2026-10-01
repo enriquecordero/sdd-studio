@@ -353,6 +353,7 @@
   },
   "scripts": {
     "build:catalog": "tsx scripts/build-catalog.ts",
+    "build:site": "npm run build:catalog && tsx scripts/build-site.ts",
     "build": "npm run build:catalog && node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "vscode:prepublish": "npm run build",

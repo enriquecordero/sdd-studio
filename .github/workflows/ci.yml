@@ -15,5 +15,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run build:catalog -- --check
+      - run: npm run build:site
       - run: npm run test:unit
       - run: xvfb-run -a npm run test:integration
