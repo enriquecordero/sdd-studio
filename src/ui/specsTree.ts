@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { docFileName } from '../specs/phase';
+import { isLeaf, parseTasks, Task, TaskStatus } from '../specs/tasks';
 import { SpecDocInfo, SpecSnapshot, SpecStore, SteeringDoc } from '../workspace/specStore';
 import { docIcon, docStatusLabel, phaseBar, specDescription } from './labels';
 
@@ -8,9 +9,17 @@ export type SpecsNode =
   | { type: 'new'; folder: vscode.WorkspaceFolder }
   | { type: 'spec'; snap: SpecSnapshot }
   | { type: 'doc'; snap: SpecSnapshot; doc: SpecDocInfo }
+  | { type: 'task'; snap: SpecSnapshot; task: Task }
   | { type: 'section'; section: 'steering' | 'powers'; folder: vscode.WorkspaceFolder }
   | { type: 'steering'; doc: SteeringDoc }
   | { type: 'info'; label: string; command?: vscode.Command };
+
+const TASK_ICONS: Record<TaskStatus, string> = { todo: 'circle-outline', in_progress: 'circle-filled', done: 'pass-filled' };
+
+/** tasks.md muestra sus tareas ejecutables cuando el spec está en implementación. */
+function showsTasks(snap: SpecSnapshot, doc: SpecDocInfo): boolean {
+  return doc.kind === 'tasks' && doc.exists && snap.phase === 'implementation';
+}
 
 export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vscode.Disposable {
   private readonly emitter = new vscode.EventEmitter<SpecsNode | undefined>();
@@ -33,6 +42,8 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vs
         return this.folderChildren(node.folder);
       case 'spec':
         return node.snap.docs.map((doc): SpecsNode => ({ type: 'doc', snap: node.snap, doc }));
+      case 'doc':
+        return showsTasks(node.snap, node.doc) ? this.taskChildren(node.snap, node.doc) : [];
       case 'section':
         return this.sectionChildren(node.section, node.folder);
       default:
@@ -63,11 +74,20 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vs
       }
       case 'doc': {
         const isCurrent = node.snap.phase === node.doc.kind;
-        const item = new vscode.TreeItem(docFileName(node.doc.kind));
+        const item = new vscode.TreeItem(
+          docFileName(node.doc.kind),
+          showsTasks(node.snap, node.doc) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None,
+        );
         item.description = docStatusLabel(node.doc, isCurrent);
         item.iconPath = new vscode.ThemeIcon(docIcon(node.doc, isCurrent));
-        item.contextValue = 'doc';
+        item.contextValue = node.doc.exists && node.doc.status === 'draft' && isCurrent ? 'doc-approvable' : 'doc';
         if (node.doc.exists) item.command = { command: 'vscode.open', title: 'Abrir', arguments: [node.doc.uri] };
+        return item;
+      }
+      case 'task': {
+        const item = new vscode.TreeItem(`${node.task.id} ${node.task.title}`);
+        item.iconPath = new vscode.ThemeIcon(TASK_ICONS[node.task.status]);
+        item.contextValue = `task-${node.task.status}`;
         return item;
       }
       case 'section': {
@@ -107,6 +127,11 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vs
       { type: 'section', section: 'steering', folder },
       { type: 'section', section: 'powers', folder },
     ];
+  }
+
+  private async taskChildren(snap: SpecSnapshot, doc: SpecDocInfo): Promise<SpecsNode[]> {
+    const { tasks } = parseTasks((await this.store.readText(doc.uri)) ?? '');
+    return tasks.filter((task) => isLeaf(task, tasks)).map((task): SpecsNode => ({ type: 'task', snap, task }));
   }
 
   private async sectionChildren(section: 'steering' | 'powers', folder: vscode.WorkspaceFolder): Promise<SpecsNode[]> {

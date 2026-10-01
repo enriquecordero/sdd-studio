@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CopilotBridge } from '../copilot/bridge';
-import { Language, newSpecPrompt, steeringPrompt } from '../copilot/prompts';
+import { AgentName, Language, newSpecPrompt, steeringPrompt } from '../copilot/prompts';
 import { toSpecName } from '../specs/names';
 import { SpecType } from '../specs/phase';
 import { SpecService } from '../workspace/specService';
@@ -21,6 +21,18 @@ interface NewSpecArgs {
 
 export function language(): Language {
   return vscode.workspace.getConfiguration('sddStudio').get<Language>('language', 'es');
+}
+
+/** Abre el agente; si Copilot Chat falla, muestra un error comprensible y devuelve false. */
+export async function openAgentSafely(deps: CommandDeps, agent: AgentName, prompt: string): Promise<boolean> {
+  try {
+    await deps.getBridge().openAgent(agent, prompt);
+    return true;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    void vscode.window.showErrorMessage(`SDD Studio: no se pudo abrir Copilot Chat (${message}).`);
+    return false;
+  }
 }
 
 async function pickFolder(store: SpecStore, requested?: string): Promise<vscode.WorkspaceFolder | undefined> {
@@ -77,9 +89,11 @@ async function newSpec(deps: CommandDeps, args: NewSpecArgs = {}): Promise<void>
   if (description === undefined) return;
 
   const multiRoot = deps.store.folders().length > 1;
-  await deps
-    .getBridge()
-    .openAgent('sdd-requirements', newSpecPrompt({ spec: name, folder: multiRoot ? folder.name : undefined, type, description, language: language() }));
+  await openAgentSafely(
+    deps,
+    'sdd-requirements',
+    newSpecPrompt({ spec: name, folder: multiRoot ? folder.name : undefined, type, description, language: language() }),
+  );
 }
 
 export function registerSpecCommands(deps: CommandDeps): vscode.Disposable {
@@ -87,7 +101,7 @@ export function registerSpecCommands(deps: CommandDeps): vscode.Disposable {
     vscode.commands.registerCommand('sddStudio.newSpec', (args?: NewSpecArgs) => newSpec(deps, args)),
     vscode.commands.registerCommand('sddStudio.refresh', () => deps.store.refresh()),
     vscode.commands.registerCommand('sddStudio.generateSteering', () =>
-      deps.getBridge().openAgent('sdd-steering', steeringPrompt(language())),
+      openAgentSafely(deps, 'sdd-steering', steeringPrompt(language())),
     ),
   );
 }

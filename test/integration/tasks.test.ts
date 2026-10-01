@@ -37,6 +37,30 @@ describe('Tareas: CodeLens y comandos', () => {
     assert.match(fake.calls[0].prompt, /Criterios relacionados: 2\.1, 2\.2/);
   });
 
+  it('runTask devuelve la tarea a pendiente si no se puede abrir Copilot Chat', async () => {
+    const api = await getApi();
+    api.setCopilotBridge({
+      openAgent: async () => {
+        throw new Error('chat no disponible');
+      },
+    });
+    await vscode.commands.executeCommand('sddStudio.runTask', ws().name, 'pagos-checkout', '2.1');
+    const text = await readWs('specs/pagos-checkout/tasks.md');
+    assert.match(text, /- \[ \] 2\.1 Validar/);
+    assert.match(text, /- \[ \] 2\. Endpoint/);
+  });
+
+  it('approveAndContinue mantiene la aprobación si no se puede abrir Copilot Chat', async () => {
+    const api = await getApi();
+    api.setCopilotBridge({
+      openAgent: async () => {
+        throw new Error('chat no disponible');
+      },
+    });
+    await vscode.commands.executeCommand('sddStudio.approveAndContinue', ws().name, 'export-csv', 'requirements');
+    assert.match(await readWs('specs/export-csv/requirements.md'), /status: approved/);
+  });
+
   it('markTaskDone en 2.1 y 2.2 completa el padre', async () => {
     await vscode.commands.executeCommand('sddStudio.markTaskDone', ws().name, 'pagos-checkout', '2.1');
     await vscode.commands.executeCommand('sddStudio.markTaskDone', ws().name, 'pagos-checkout', '2.2');

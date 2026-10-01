@@ -207,17 +207,20 @@
         "command": "sddStudio.runTask",
         "title": "Ejecutar tarea",
         "category": "SDD Studio",
+        "icon": "$(play)",
         "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "sddStudio.markTaskDone",
         "title": "Marcar tarea hecha",
-        "category": "SDD Studio"
+        "category": "SDD Studio",
+        "icon": "$(check)"
       },
       {
         "command": "sddStudio.approveAndContinue",
         "title": "Aprobar y continuar",
-        "category": "SDD Studio"
+        "category": "SDD Studio",
+        "icon": "$(pass)"
       },
       {
         "command": "sddStudio.openRequirements",
@@ -253,6 +256,36 @@
         {
           "command": "sddStudio.generateSteering",
           "when": "view == sddStudio.specs && viewItem == section-steering"
+        },
+        {
+          "command": "sddStudio.approveAndContinue",
+          "when": "view == sddStudio.specs && viewItem == doc-approvable",
+          "group": "inline"
+        },
+        {
+          "command": "sddStudio.approveAndContinue",
+          "when": "view == sddStudio.specs && viewItem == doc-approvable",
+          "group": "sdd@1"
+        },
+        {
+          "command": "sddStudio.runTask",
+          "when": "view == sddStudio.specs && viewItem == task-todo",
+          "group": "inline@1"
+        },
+        {
+          "command": "sddStudio.runTask",
+          "when": "view == sddStudio.specs && viewItem == task-todo",
+          "group": "sdd@1"
+        },
+        {
+          "command": "sddStudio.markTaskDone",
+          "when": "view == sddStudio.specs && viewItem =~ /^task-(todo|in_progress)$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "sddStudio.markTaskDone",
+          "when": "view == sddStudio.specs && viewItem =~ /^task-(todo|in_progress)$/",
+          "group": "sdd@2"
         }
       ],
       "commandPalette": [
