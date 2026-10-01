@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { CopilotBridge, VsCodeCopilotBridge } from './copilot/bridge';
+import { registerDoctor, runDoctorOnce } from './doctor/doctor';
 import { createToolHandlers, registerTools, ToolHandlers } from './tools/registerTools';
 import { TaskDiagnostics } from './ui/diagnostics';
 import { registerSpecCommands } from './ui/specCommands';
@@ -31,6 +32,7 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
     registerTools(tools),
     vscode.window.createTreeView('sddStudio.specs', { treeDataProvider: specsTree }),
     registerSpecCommands(deps),
+    registerDoctor(context),
   );
 
   const lensProvider = new SpecLensProvider(store);
@@ -40,6 +42,8 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
     registerTaskCommands(deps),
     new TaskDiagnostics(store),
   );
+
+  void runDoctorOnce(context);
 
   return {
     store,

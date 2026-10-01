@@ -223,6 +223,12 @@
         "command": "sddStudio.openRequirements",
         "title": "Ver requisitos",
         "category": "SDD Studio"
+      },
+      {
+        "command": "sddStudio.doctor",
+        "title": "Diagnóstico",
+        "category": "SDD Studio",
+        "icon": "$(pulse)"
       }
     ],
     "menus": {
@@ -236,6 +242,11 @@
           "command": "sddStudio.refresh",
           "when": "view == sddStudio.specs",
           "group": "navigation@2"
+        },
+        {
+          "command": "sddStudio.doctor",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
