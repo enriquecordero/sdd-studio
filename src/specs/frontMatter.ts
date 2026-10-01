@@ -5,7 +5,8 @@ export interface FrontMatter {
   approvedAt?: string;
 }
 
-const FRONT_MATTER_RE = /^---\r?\n([\s\S]*?)\r?\n?---(?:\r?\n|$)/;
+/** El cierre `---` debe ocupar su propia línea (admite espacios finales); el front matter puede estar vacío. */
+const FRONT_MATTER_RE = /^---\r?\n(?:([\s\S]*?)\r?\n)?---[ \t]*(?:\r?\n|$)/;
 
 interface SplitResult {
   lines: string[];
@@ -17,7 +18,7 @@ function split(text: string): SplitResult {
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
   const match = FRONT_MATTER_RE.exec(text);
   if (!match) return { lines: [], body: text, eol };
-  const inner = match[1];
+  const inner = match[1] ?? '';
   return { lines: inner === '' ? [] : inner.split(/\r?\n/), body: text.slice(match[0].length), eol };
 }
 

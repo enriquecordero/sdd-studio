@@ -63,3 +63,26 @@ describe('prepareSpecDocContent', () => {
     expect(prepareSpecDocContent(doc)).toBe(doc);
   });
 });
+
+describe('delimitador de cierre (M1)', () => {
+  it('un --- a mitad de línea no cierra el front matter', () => {
+    const text = '---\nnotes: a---\nstatus: approved\n---\n# Doc\n';
+    expect(readFrontMatter(text).status).toBe('approved');
+    expect(frontMatterFields(text).get('notes')).toBe('a---');
+    expect(setFrontMatterFields(text, { status: 'draft' })).toBe('---\nnotes: a---\nstatus: draft\n---\n# Doc\n');
+  });
+  it('front matter vacío', () => {
+    expect(setFrontMatterFields('---\n---\n# Doc\n', { status: 'draft' })).toBe('---\nstatus: draft\n---\n# Doc\n');
+  });
+  it('CRLF con front matter vacío y con campos', () => {
+    expect(setFrontMatterFields('---\r\n---\r\nx\r\n', { status: 'draft' })).toBe('---\r\nstatus: draft\r\n---\r\nx\r\n');
+    expect(readFrontMatter('---\r\nnotes: a---\r\nstatus: approved\r\n---\r\nx\r\n').status).toBe('approved');
+  });
+  it('un cuerpo que empieza con una regla horizontal sin cierre no es front matter', () => {
+    expect(prepareSpecDocContent('---\n# Diseño\n\ntexto\n')).toBe('---\n# Diseño\n\ntexto\n');
+    expect(readFrontMatter('---\n# Diseño\n').status).toBe('draft');
+  });
+  it('acepta espacios tras el --- de cierre y fin de archivo', () => {
+    expect(readFrontMatter('---\nstatus: approved\n---  ').status).toBe('approved');
+  });
+});
