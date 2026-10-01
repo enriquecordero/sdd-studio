@@ -5,6 +5,11 @@ import { CheckResult, DoctorEnv, runChecks } from './checks';
 const STRICT_SETTING = 'chat.customizations.strictPluginOnlyCustomization';
 const RAN_FOR_KEY = 'sddStudio.doctorRanFor';
 
+export function isStrictPluginOnly(): boolean {
+  const value = vscode.workspace.getConfiguration().get<unknown>(STRICT_SETTING, false);
+  return value === true || (Array.isArray(value) && value.length > 0);
+}
+
 /**
  * getSession({ silent: true }) devuelve undefined hasta que el usuario concede acceso a esta extensión,
  * así que daba un falso "sin sesión". Usamos getAccounts (sin consentimiento) si existe en esta versión;
@@ -24,7 +29,6 @@ async function collectEnv(context: vscode.ExtensionContext): Promise<DoctorEnv> 
   const chat = vscode.workspace.getConfiguration('chat');
   const githubSignedIn = await githubSessionState();
   const engines: string = context.extension.packageJSON.engines.vscode;
-  const value = vscode.workspace.getConfiguration().get<unknown>(STRICT_SETTING, false);
   return {
     vscodeVersion: vscode.version,
     minVersion: engines.replace(/^[^\d]*/, ''),
@@ -32,7 +36,7 @@ async function collectEnv(context: vscode.ExtensionContext): Promise<DoctorEnv> 
     githubSignedIn,
     agentModeEnabled: chat.get<boolean>('agent.enabled', true),
     extensionToolsEnabled: chat.get<boolean>('extensionTools.enabled', true),
-    strictPluginOnly: value === true || (Array.isArray(value) && value.length > 0),
+    strictPluginOnly: isStrictPluginOnly(),
   };
 }
 

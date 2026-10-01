@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { CopilotBridge, VsCodeCopilotBridge } from './copilot/bridge';
-import { registerDoctor, runDoctorOnce } from './doctor/doctor';
+import { isStrictPluginOnly, registerDoctor, runDoctorOnce } from './doctor/doctor';
 import { CatalogSource } from './powers/catalogSource';
+import { registerPowerCommands } from './powers/commands';
+import { GalleryController } from './powers/galleryPanel';
 import { PowerInstaller } from './powers/installer';
 import { PowersService } from './powers/powersService';
 import { createToolHandlers, registerTools, ToolHandlers } from './tools/registerTools';
@@ -20,6 +22,7 @@ export interface SddStudioApi {
   tools: ToolHandlers;
   specsTree: SpecsTreeProvider;
   powers: PowersService;
+  gallery: GalleryController;
   setCopilotBridge(bridge: CopilotBridge): void;
 }
 
@@ -27,12 +30,14 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
   const store = new SpecStore();
   const service = new SpecService(store);
   const tools = createToolHandlers(service);
-  const specsTree = new SpecsTreeProvider(store);
   const powers = new PowersService(
     new CatalogSource(vscode.Uri.joinPath(context.extensionUri, 'dist', 'catalog.json'), context.globalStorageUri),
     new PowerInstaller(),
   );
+  const specsTree = new SpecsTreeProvider(store, powers);
   context.subscriptions.push(powers);
+  const gallery = new GalleryController(powers, store, isStrictPluginOnly);
+  context.subscriptions.push(gallery, registerPowerCommands({ powers, store, gallery }));
   let bridge: CopilotBridge = new VsCodeCopilotBridge();
   const deps = { store, service, getBridge: () => bridge };
 
@@ -62,6 +67,7 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
     tools,
     specsTree,
     powers,
+    gallery,
     setCopilotBridge: (b) => {
       bridge = b;
     },

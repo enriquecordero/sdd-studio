@@ -256,7 +256,12 @@
         "title": "Diagnóstico",
         "category": "SDD Studio",
         "icon": "$(pulse)"
-      }
+      },
+      { "command": "sddStudio.openPowers", "title": "Abrir galería de Powers", "category": "SDD Studio", "icon": "$(zap)" },
+      { "command": "sddStudio.checkPowerUpdates", "title": "Buscar actualizaciones de Powers", "category": "SDD Studio", "icon": "$(cloud-download)" },
+      { "command": "sddStudio.activatePower", "title": "Activar Power", "category": "SDD Studio", "enablement": "isWorkspaceTrusted" },
+      { "command": "sddStudio.updatePower", "title": "Actualizar Power", "category": "SDD Studio", "enablement": "isWorkspaceTrusted" },
+      { "command": "sddStudio.deactivatePower", "title": "Desactivar Power", "category": "SDD Studio" }
     ],
     "menus": {
       "view/title": [
@@ -274,7 +279,8 @@
           "command": "sddStudio.doctor",
           "when": "view == sddStudio.specs",
           "group": "navigation@3"
-        }
+        },
+        { "command": "sddStudio.openPowers", "when": "view == sddStudio.specs", "group": "navigation@4" }
       ],
       "view/item/context": [
         {
@@ -310,7 +316,10 @@
           "command": "sddStudio.markTaskDone",
           "when": "view == sddStudio.specs && viewItem =~ /^task-(todo|in_progress)$/",
           "group": "sdd@2"
-        }
+        },
+        { "command": "sddStudio.updatePower", "when": "view == sddStudio.specs && viewItem == power-update", "group": "inline" },
+        { "command": "sddStudio.updatePower", "when": "view == sddStudio.specs && viewItem == power-update" },
+        { "command": "sddStudio.deactivatePower", "when": "view == sddStudio.specs && viewItem =~ /^power-/" }
       ],
       "commandPalette": [
         {
@@ -328,7 +337,10 @@
         {
           "command": "sddStudio.openRequirements",
           "when": "false"
-        }
+        },
+        { "command": "sddStudio.activatePower", "when": "false" },
+        { "command": "sddStudio.updatePower", "when": "false" },
+        { "command": "sddStudio.deactivatePower", "when": "false" }
       ]
     },
     "themes": [
