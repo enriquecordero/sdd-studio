@@ -342,7 +342,7 @@ describe('PowerInstaller con MCP', () => {
       err = e as typeof err;
     }
     assert.strictEqual(err.code, 'MCP_FILE_INVALID');
-    assert.strictEqual(err.message, 'SDD Studio no pudo editar .vscode/mcp.json de forma segura (detalle). Edítalo a mano y reintenta.');
+    assert.strictEqual(err.message, 'No se pudo editar .vscode/mcp.json de forma segura (detalle). Edítalo a mano y reintenta.');
     assert.strictEqual(err.fileUri?.path, uri.path);
     assert.throws(() => mcpEditOrFileInvalid(() => { throw new Error('otro'); }, uri), /otro/);
     assert.strictEqual(mcpEditOrFileInvalid(() => 'ok', uri), 'ok');

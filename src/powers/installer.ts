@@ -99,7 +99,7 @@ export function mcpEditOrFileInvalid<T>(editFn: () => T, fileUri: vscode.Uri): T
     return editFn();
   } catch (e) {
     if (!(e instanceof McpJsonError)) throw e;
-    throw new PowerError('MCP_FILE_INVALID', `SDD Studio no pudo editar .vscode/mcp.json de forma segura (${e.message}). Edítalo a mano y reintenta.`, fileUri);
+    throw new PowerError('MCP_FILE_INVALID', `No se pudo editar .vscode/mcp.json de forma segura (${e.message}). Edítalo a mano y reintenta.`, fileUri);
   }
 }
 
