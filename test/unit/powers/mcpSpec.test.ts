@@ -76,6 +76,13 @@ describe('validateMcpSpec', () => {
   });
 });
 
+describe('prerrequisitos y propiedades heredadas', () => {
+  it('rechaza nombres de Object.prototype como prerrequisito', () => {
+    expect(errs(mcpSpec({ prerequisites: ['constructor' as never] }))).toMatch(/"prerequisites" debe ser una lista/);
+    expect(errs(mcpSpec({ prerequisites: ['toString' as never] }))).toMatch(/"prerequisites" debe ser una lista/);
+  });
+});
+
 describe('helpers de McpSpec', () => {
   it('serversForMode elige operate solo si existe', () => {
     const spec = mcpSpec();

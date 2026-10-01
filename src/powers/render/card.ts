@@ -70,9 +70,9 @@ function renderModeSelector(p: CatalogPower, mode: McpMode | undefined): string 
 export function renderActions(p: CatalogPower, status: PowerStatus | undefined, mcp: { mode?: McpMode; blocked?: string } = {}): string {
   const id = e(p.id);
   const off = `<button class="pw-btn pw-ghost" data-action="deactivate" data-id="${id}">Desactivar</button>`;
-  const mode = renderModeSelector(p, mcp.mode);
-  if (status === 'active') return `<span class="pw-state">✓ Activo · v${e(p.version)}</span>${mode}${off}`;
-  if (status === 'update') return `<button class="pw-btn" data-action="update" data-id="${id}">Actualizar a v${e(p.version)}</button>${mode}${off}`;
+  if (status === 'active') return `<span class="pw-state">✓ Activo · v${e(p.version)}</span>${renderModeSelector(p, mcp.mode)}${off}`;
+  // Sin selector: cambiar de modo exige estar en la versión del catálogo (setMode lanza UPDATE_REQUIRED).
+  if (status === 'update') return `<button class="pw-btn" data-action="update" data-id="${id}">Actualizar a v${e(p.version)}</button>${off}`;
   if (p.mcp && mcp.blocked) {
     return (
       `<button class="pw-btn pw-blocked" disabled title="${e(`Tu organización bloquea los servidores MCP (${mcp.blocked}). Ejecuta "SDD Studio: Diagnóstico".`)}">🔒 Bloqueado por tu organización</button>` +

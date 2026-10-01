@@ -249,6 +249,13 @@ describe('Powers con MCP', () => {
     expect(renderActions(cloudy, 'available', { mode: 'readOnly' })).not.toContain('setMode');
   });
 
+  it('sin selector de modo si hay que actualizar (setMode fallaría con UPDATE_REQUIRED)', () => {
+    const html = renderActions(cloudy, 'update', { mode: 'readOnly' });
+    expect(html).not.toContain('setMode');
+    expect(html).toContain('data-action="update"');
+    expect(html).toContain('data-action="deactivate"');
+  });
+
   it('política bloqueada: botón 🔒 deshabilitado con la razón y enlace al diagnóstico', () => {
     const html = renderActions(cloudy, 'available', { blocked: 'chat.mcp.access = none' });
     expect(html).toContain('🔒 Bloqueado por tu organización');

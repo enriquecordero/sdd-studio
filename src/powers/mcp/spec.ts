@@ -111,7 +111,7 @@ export function validateMcpSpec(x: unknown, where: string): string[] {
   if (!isObj(x)) return [`${where}: mcp.vscode.json debe ser un objeto.`];
   const errors: string[] = [];
   const prereqs = x.prerequisites;
-  if (!Array.isArray(prereqs) || !prereqs.every((p) => typeof p === 'string' && p in PREREQUISITES)) {
+  if (!Array.isArray(prereqs) || !prereqs.every((p) => typeof p === 'string' && Object.hasOwn(PREREQUISITES, p))) {
     errors.push(`${where}: "prerequisites" debe ser una lista con valores de: ${Object.keys(PREREQUISITES).join(', ')}.`);
   }
   if (typeof x.beta !== 'boolean') errors.push(`${where}: "beta" debe ser true o false.`);
