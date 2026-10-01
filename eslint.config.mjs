@@ -24,6 +24,7 @@ export default tseslint.config(
       'src/powers/validateSource.ts',
       'src/powers/fetcher.ts',
       'src/powers/render/**/*.ts',
+      'src/powers/mcp/**/*.ts',
     ],
     rules: {
       'no-restricted-imports': ['error', { paths: [{ name: 'vscode', message: 'Módulo puro: no importes vscode.' }] }],
