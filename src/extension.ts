@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { CopilotBridge, VsCodeCopilotBridge } from './copilot/bridge';
 import { registerDoctor, runDoctorOnce } from './doctor/doctor';
+import { CatalogSource } from './powers/catalogSource';
+import { PowerInstaller } from './powers/installer';
+import { PowersService } from './powers/powersService';
 import { createToolHandlers, registerTools, ToolHandlers } from './tools/registerTools';
 import { TaskDiagnostics } from './ui/diagnostics';
 import { registerSpecCommands } from './ui/specCommands';
@@ -16,6 +19,7 @@ export interface SddStudioApi {
   service: SpecService;
   tools: ToolHandlers;
   specsTree: SpecsTreeProvider;
+  powers: PowersService;
   setCopilotBridge(bridge: CopilotBridge): void;
 }
 
@@ -24,6 +28,11 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
   const service = new SpecService(store);
   const tools = createToolHandlers(service);
   const specsTree = new SpecsTreeProvider(store);
+  const powers = new PowersService(
+    new CatalogSource(vscode.Uri.joinPath(context.extensionUri, 'dist', 'catalog.json'), context.globalStorageUri),
+    new PowerInstaller(),
+  );
+  context.subscriptions.push(powers);
   let bridge: CopilotBridge = new VsCodeCopilotBridge();
   const deps = { store, service, getBridge: () => bridge };
 
@@ -52,6 +61,7 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
     service,
     tools,
     specsTree,
+    powers,
     setCopilotBridge: (b) => {
       bridge = b;
     },
