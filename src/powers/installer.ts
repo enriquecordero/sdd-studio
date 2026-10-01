@@ -1,19 +1,49 @@
 import * as vscode from 'vscode';
+import { readMcpPolicyEnv } from '../doctor/doctor';
 import { isSafeRelativePath, isValidId } from './catalog';
 import { powerHash } from './hash';
-import { LockEntry, Lockfile, parseLock, serializeLock, withEntry, withoutEntry } from './lock';
+import { inputsInUse, LockEntry, Lockfile, LockMcp, mcpFileCreatedByUs, parseLock, serializeLock, withEntry, withoutEntry } from './lock';
+import { addEntries, entryHash, isEmptyMcpFile, McpJsonError, readEntries, removeEntries } from './mcp/mcpJson';
+import { McpPolicyEnv, McpPolicyState, mcpPolicyState } from './mcp/policy';
+import { McpMode, McpSpec, serversForMode } from './mcp/spec';
 import { CatalogPower } from './types';
 
-export type PowerErrorCode = 'FOREIGN_SKILL' | 'NOT_INSTALLED' | 'UNSAFE_PATH' | 'NOT_FOUND' | 'LOCK_INVALID';
+export type PowerErrorCode =
+  | 'FOREIGN_SKILL'
+  | 'NOT_INSTALLED'
+  | 'UNSAFE_PATH'
+  | 'NOT_FOUND'
+  | 'LOCK_INVALID'
+  | 'MCP_BLOCKED'
+  | 'MCP_FILE_INVALID'
+  | 'MCP_NAME_CONFLICT'
+  | 'MCP_NO_OPERATE';
 
 export class PowerError extends Error {
   constructor(
     readonly code: PowerErrorCode,
     message: string,
+    /** Archivo que conviene abrir para arreglar el problema (MCP_FILE_INVALID). */
+    readonly fileUri?: vscode.Uri,
   ) {
     super(message);
     this.name = 'PowerError';
   }
+}
+
+/** Por qué se pide confirmar antes de sobrescribir o borrar: el skill o una entrada de `.vscode/mcp.json` cambiaron a mano. */
+export type OverwriteReason = 'SKILL_EDITED' | 'MCP_EDITED';
+export type ConfirmOverwrite = (reason: OverwriteReason) => Promise<boolean>;
+/** Confirmación modal antes de añadir servidores MCP (spec §6.3, paso 4). */
+export type ConfirmMcp = (mcp: McpSpec) => Promise<boolean>;
+
+interface McpPlan {
+  before: string | undefined;
+  /** undefined = borrar `.vscode/mcp.json`. */
+  after: string | undefined;
+  lock: LockMcp | undefined;
+  /** Algún servidor stdio del destino ejecutaría una línea de comando distinta de la instalada (spec §10). */
+  commandChanged: boolean;
 }
 
 const decoder = new TextDecoder();
@@ -44,9 +74,26 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
 
 const under = (base: vscode.Uri, rel: string) => vscode.Uri.joinPath(base, ...rel.split('/'));
 
+/** Línea de comando (command + args) de una entrada stdio, comparable sin ambigüedad; undefined si no es stdio. */
+function stdioCommand(server: unknown): string | undefined {
+  const s = server as { type?: unknown; command?: unknown; args?: unknown } | null;
+  if (typeof s !== 'object' || s === null || s.type !== 'stdio') return undefined;
+  return JSON.stringify([s.command, ...(Array.isArray(s.args) ? s.args : [])]);
+}
+
 export class PowerInstaller {
+  constructor(private readonly readPolicy: () => McpPolicyEnv = readMcpPolicyEnv) {}
+
+  policy(): McpPolicyState {
+    return mcpPolicyState(this.readPolicy());
+  }
+
   lockUri(folder: vscode.WorkspaceFolder): vscode.Uri {
     return vscode.Uri.joinPath(folder.uri, '.github', 'powers.lock.json');
+  }
+
+  mcpUri(folder: vscode.WorkspaceFolder): vscode.Uri {
+    return vscode.Uri.joinPath(folder.uri, '.vscode', 'mcp.json');
   }
 
   skillDir(folder: vscode.WorkspaceFolder, skillName: string): vscode.Uri {
@@ -62,32 +109,44 @@ export class PowerInstaller {
     }
   }
 
-  async activate(folder: vscode.WorkspaceFolder, power: CatalogPower, now: Date = new Date()): Promise<void> {
+  async activate(
+    folder: vscode.WorkspaceFolder,
+    power: CatalogPower,
+    now: Date = new Date(),
+    confirmMcp: ConfirmMcp = async () => true,
+  ): Promise<'activated' | 'cancelled'> {
     this.assertSafe(power.skillName, Object.keys(power.files));
     const lock = await this.readLock(folder);
-    if (lock.powers[power.id]) return;
+    if (lock.powers[power.id]) return 'activated';
     if (await exists(this.skillDir(folder, power.skillName))) {
       throw new PowerError(
         'FOREIGN_SKILL',
         `Ya existe un skill "${power.skillName}" que no instaló SDD Studio (.github/skills/${power.skillName}/). Renómbralo o bórralo para activar este Power.`,
       );
     }
+    const plan = power.mcp ? await this.planMcp(folder, lock, power.id, { spec: power.mcp, mode: 'readOnly' }) : undefined;
+    if (plan === 'cancelled') return 'cancelled';
+    if (power.mcp && !(await confirmMcp(power.mcp))) return 'cancelled';
     try {
       await this.writeFiles(folder, power);
-      await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now)));
+      if (plan) await this.applyMcp(folder, plan);
+      await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now, plan?.lock)));
     } catch (e) {
       const dir = this.skillDir(folder, power.skillName);
       for (const rel of Object.keys(power.files)) await this.deleteIfExists(under(dir, rel));
       await this.pruneEmptyDirs(dir);
+      if (plan) await this.restoreMcp(folder, plan.before);
       throw e;
     }
+    return 'activated';
   }
 
   async update(
     folder: vscode.WorkspaceFolder,
     power: CatalogPower,
-    confirmOverwrite: () => Promise<boolean>,
+    confirmOverwrite: ConfirmOverwrite,
     now: Date = new Date(),
+    confirmMcp: ConfirmMcp = async () => true,
   ): Promise<'updated' | 'cancelled'> {
     this.assertSafe(power.skillName, Object.keys(power.files));
     const lock = await this.readLock(folder);
@@ -98,47 +157,134 @@ export class PowerInstaller {
       throw new PowerError('UNSAFE_PATH', `El Power "${power.id}" cambió de nombre de skill; desactívalo y vuelve a activarlo.`);
     }
     const dir = this.skillDir(folder, entry.skillName);
-    const onDisk: Record<string, string> = {};
-    let missing = false;
-    for (const rel of entry.files) {
-      const text = await readText(under(dir, rel));
-      if (text === undefined) missing = true;
-      else onDisk[rel] = text;
+    if (await this.skillEdited(dir, entry)) {
+      if (!(await confirmOverwrite('SKILL_EDITED'))) return 'cancelled';
     }
-    if (missing || powerHash(onDisk) !== entry.sha256) {
-      if (!(await confirmOverwrite())) return 'cancelled';
-    }
+    const mode: McpMode = power.mcp?.operate ? (entry.mcp?.mode ?? 'readOnly') : 'readOnly';
+    const target = power.mcp ? { spec: power.mcp, mode } : undefined;
+    const plan = power.mcp || entry.mcp ? await this.planMcp(folder, lock, power.id, target, confirmOverwrite) : undefined;
+    if (plan === 'cancelled') return 'cancelled';
+    // Un servidor stdio ejecuta código en la máquina del dev: si cambia lo que se ejecuta, se vuelve a confirmar.
+    if (power.mcp && plan?.commandChanged && !(await confirmMcp(power.mcp))) return 'cancelled';
     await this.writeFiles(folder, power);
     for (const rel of entry.files) if (!(rel in power.files)) await this.deleteIfExists(under(dir, rel));
     await this.pruneEmptyDirs(dir);
-    await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now)));
+    if (plan) await this.applyMcp(folder, plan);
+    await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now, plan?.lock)));
     return 'updated';
+  }
+
+  /** Reescribe las entradas MCP del Power en `mode`. También repara entradas que faltan (acción "Reparar" del diagnóstico). */
+  async setMode(
+    folder: vscode.WorkspaceFolder,
+    power: CatalogPower,
+    mode: McpMode,
+    confirmOverwrite: ConfirmOverwrite,
+  ): Promise<'changed' | 'cancelled'> {
+    const lock = await this.readLock(folder);
+    const entry = lock.powers[power.id];
+    if (!entry?.mcp || !power.mcp) throw new PowerError('NOT_INSTALLED', `El Power "${power.id}" no tiene servidores MCP activos en este repo.`);
+    if (mode === 'operate' && !power.mcp.operate) {
+      throw new PowerError('MCP_NO_OPERATE', `El Power "${power.presentation.displayName}" no tiene modo Operar.`);
+    }
+    const plan = await this.planMcp(folder, lock, power.id, { spec: power.mcp, mode }, confirmOverwrite);
+    if (plan === 'cancelled') return 'cancelled';
+    await this.applyMcp(folder, plan);
+    await this.writeLock(folder, withEntry(lock, power.id, { ...entry, mcp: plan.lock }));
+    return 'changed';
   }
 
   async deactivate(
     folder: vscode.WorkspaceFolder,
     id: string,
-    confirmDiscard: () => Promise<boolean>,
+    confirmDiscard: ConfirmOverwrite,
   ): Promise<'deactivated' | 'cancelled'> {
     const lock = await this.readLock(folder);
     const entry = lock.powers[id];
     if (!entry) throw new PowerError('NOT_INSTALLED', `El Power "${id}" no está activo en este repo.`);
     this.assertSafe(entry.skillName, entry.files);
     const dir = this.skillDir(folder, entry.skillName);
-    const onDisk: Record<string, string> = {};
-    let missing = false;
-    for (const rel of entry.files) {
-      const text = await readText(under(dir, rel));
-      if (text === undefined) missing = true;
-      else onDisk[rel] = text;
+    if (await this.skillEdited(dir, entry)) {
+      if (!(await confirmDiscard('SKILL_EDITED'))) return 'cancelled';
     }
-    if (missing || powerHash(onDisk) !== entry.sha256) {
-      if (!(await confirmDiscard())) return 'cancelled';
-    }
+    const plan = entry.mcp ? await this.planMcp(folder, lock, id, undefined, confirmDiscard) : undefined;
+    if (plan === 'cancelled') return 'cancelled';
+    if (plan) await this.applyMcp(folder, plan);
     for (const rel of entry.files) await this.deleteIfExists(under(dir, rel));
     await this.pruneEmptyDirs(dir);
     await this.writeLock(folder, withoutEntry(lock, id));
     return 'deactivated';
+  }
+
+  /**
+   * Calcula el nuevo `.vscode/mcp.json` para pasar de lo que el lock registra de `id` a `target` (undefined = quitar todo).
+   * Lanza MCP_BLOCKED, MCP_FILE_INVALID o MCP_NAME_CONFLICT antes de tocar nada.
+   */
+  private async planMcp(
+    folder: vscode.WorkspaceFolder,
+    lock: Lockfile,
+    id: string,
+    target: { spec: McpSpec; mode: McpMode } | undefined,
+    confirmOverwrite?: ConfirmOverwrite,
+  ): Promise<McpPlan | 'cancelled'> {
+    if (target) {
+      const policy = this.policy();
+      if (policy.state === 'blocked') {
+        throw new PowerError('MCP_BLOCKED', `Tu organización bloquea los servidores MCP (${policy.reason}). Ejecuta "SDD Studio: Diagnóstico" para más detalles.`);
+      }
+    }
+    const current = lock.powers[id]?.mcp;
+    const currentNames = Object.keys(current?.servers ?? {});
+    const targetServers = target ? serversForMode(target.spec, target.mode) : {};
+    const before = await readText(this.mcpUri(folder));
+    let present: Record<string, unknown>;
+    try {
+      present = readEntries(before, [...new Set([...currentNames, ...Object.keys(targetServers)])]);
+    } catch (e) {
+      if (!(e instanceof McpJsonError)) throw e;
+      throw new PowerError('MCP_FILE_INVALID', `${e.message} Corrige .vscode/mcp.json y reintenta.`, this.mcpUri(folder));
+    }
+    const foreign = Object.keys(targetServers).find((n) => !currentNames.includes(n) && n in present);
+    if (foreign) throw new PowerError('MCP_NAME_CONFLICT', `Ya existe un servidor "${foreign}" en .vscode/mcp.json que no instaló SDD Studio.`);
+    const edited = currentNames.some((n) => n in present && entryHash(present[n]) !== current!.servers[n]);
+    if (edited && confirmOverwrite && !(await confirmOverwrite('MCP_EDITED'))) return 'cancelled';
+
+    const targetInputs = target?.spec.inputs.map((i) => i.id) ?? [];
+    const keep = inputsInUse(lock, id);
+    const dropInputs = (current?.inputs ?? []).filter((i) => !targetInputs.includes(i) && !keep.has(i));
+    let after = removeEntries(before, currentNames.filter((n) => !(n in targetServers)), dropInputs);
+    if (target) after = addEntries(after, targetServers, target.spec.inputs);
+    const commandChanged = Object.entries(targetServers).some(
+      ([n, s]) =>
+        s.type === 'stdio' &&
+        current?.servers[n] !== entryHash(s) &&
+        (!(n in present) || stdioCommand(present[n]) !== stdioCommand(s)),
+    );
+    const createdFile = current?.createdFile ?? (before === undefined || mcpFileCreatedByUs(lock, id));
+    const deleteFile = !target && createdFile && isEmptyMcpFile(after);
+    return {
+      before,
+      after: deleteFile ? undefined : after,
+      lock: target
+        ? {
+            mode: target.mode,
+            servers: Object.fromEntries(Object.entries(targetServers).map(([n, s]) => [n, entryHash(s)])),
+            inputs: [...targetInputs].sort(),
+            createdFile,
+          }
+        : undefined,
+      commandChanged,
+    };
+  }
+
+  private async skillEdited(dir: vscode.Uri, entry: LockEntry): Promise<boolean> {
+    const onDisk: Record<string, string> = {};
+    for (const rel of entry.files) {
+      const text = await readText(under(dir, rel));
+      if (text === undefined) return true;
+      onDisk[rel] = text;
+    }
+    return powerHash(onDisk) !== entry.sha256;
   }
 
   private assertSafe(skillName: string, paths: string[]): void {
@@ -147,13 +293,15 @@ export class PowerInstaller {
     }
   }
 
-  private entryFor(power: CatalogPower, now: Date): LockEntry {
+  /** El sha256 del lock es el de los archivos del skill (sin MCP): así se detectan ediciones locales. */
+  private entryFor(power: CatalogPower, now: Date, mcp: LockMcp | undefined): LockEntry {
     return {
       version: power.version,
       skillName: power.skillName,
-      sha256: power.sha256,
+      sha256: powerHash(power.files),
       files: Object.keys(power.files).sort(),
       installedAt: now.toISOString(),
+      ...(mcp ? { mcp } : {}),
     };
   }
 
@@ -164,6 +312,21 @@ export class PowerInstaller {
       await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(uri, '..'));
       await vscode.workspace.fs.writeFile(uri, encoder.encode(content));
     }
+  }
+
+  private async applyMcp(folder: vscode.WorkspaceFolder, plan: McpPlan): Promise<void> {
+    if (plan.after === undefined) await this.deleteIfExists(this.mcpUri(folder));
+    else if (plan.after !== plan.before) await this.writeMcpJson(folder, plan.after);
+  }
+
+  private async restoreMcp(folder: vscode.WorkspaceFolder, before: string | undefined): Promise<void> {
+    if (before === undefined) await this.deleteIfExists(this.mcpUri(folder));
+    else await this.writeMcpJson(folder, before);
+  }
+
+  protected async writeMcpJson(folder: vscode.WorkspaceFolder, text: string): Promise<void> {
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(folder.uri, '.vscode'));
+    await vscode.workspace.fs.writeFile(this.mcpUri(folder), encoder.encode(text));
   }
 
   protected async writeLock(folder: vscode.WorkspaceFolder, lock: Lockfile): Promise<void> {
