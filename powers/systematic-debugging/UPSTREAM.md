@@ -12,7 +12,7 @@
 - skills/systematic-debugging/root-cause-tracing.md → skills/systematic-debugging/root-cause-tracing.md
 - skills/systematic-debugging/defense-in-depth.md → skills/systematic-debugging/defense-in-depth.md
 - skills/systematic-debugging/condition-based-waiting.md → skills/systematic-debugging/condition-based-waiting.md
-- skills/systematic-debugging/condition-based-waiting-example.ts → skills/systematic-debugging/condition-based-waiting-example.ts
+- skills/systematic-debugging/condition-based-waiting-example.ts → skills/systematic-debugging/condition-based-waiting-example.md
 - skills/systematic-debugging/find-polluter.sh → skills/systematic-debugging/find-polluter.sh
 
 ## Archivos excluidos
@@ -24,4 +24,5 @@
 - SKILL.md: `superpowers:test-driven-development` → `tdd` (skill del catálogo).
 - SKILL.md: `superpowers:verification-before-completion` → `verification` (skill del catálogo).
 - SKILL.md: "your human partner" → "the user" (3 apariciones, incluido el título "The User's Signals You're Doing It Wrong").
+- condition-based-waiting-example.ts → condition-based-waiting-example.md: el código va dentro de un bloque ```ts con un título, para que no se compile ni se lint en los repos de los usuarios; las referencias en condition-based-waiting.md se actualizan.
 - Demás archivos: sin cambios.

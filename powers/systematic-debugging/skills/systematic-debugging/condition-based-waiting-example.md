@@ -1,3 +1,6 @@
+# Condition-based waiting: example implementation
+
+```ts
 // Complete implementation of condition-based waiting utilities
 // From: Lace test infrastructure improvements (2025-10-03)
 // Context: Fixed 15 flaky tests by replacing arbitrary timeouts
@@ -156,3 +159,4 @@ export function waitForEventMatch(
 // expect(toolResults.length).toBe(2); // Always succeeds
 //
 // Result: 60% pass rate → 100%, 40% faster execution
+```

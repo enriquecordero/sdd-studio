@@ -25,6 +25,9 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 - [ ] "+ Activar en este repo" en TDD crea `.github/skills/tdd/` y `.github/powers.lock.json`; la tarjeta pasa a "✓ Activo".
 - [ ] Con TDD activo, pedir a Copilot "implementa X" hace que escriba el test primero (el skill se carga).
 - [ ] Editar a mano `.github/skills/tdd/SKILL.md` y forzar una actualización pregunta antes de sobrescribir.
-- [ ] "Desactivar" borra solo los archivos del Power.
+- [ ] "Desactivar" borra solo los archivos del Power (y pregunta si los editaste).
+- [ ] En un workspace no confiable, "+ Activar" y "Actualizar" no hacen cambios (aviso de confianza).
+- [ ] En un workspace con varias carpetas, activar un Power pregunta en qué carpeta.
+- [ ] /grill-me y /poteto-mode se invocan explícitamente (no se cargan solos).
 - [ ] "Buscar actualizaciones" sin red muestra un aviso y la galería sigue funcionando.
 - [ ] La página https://enriquecordero.github.io/sdd-studio/powers/ muestra las mismas tarjetas y cada detalle.
