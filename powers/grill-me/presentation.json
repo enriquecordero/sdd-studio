@@ -3,7 +3,7 @@
   "icon": "🔥",
   "category": "planning",
   "summary": "Te interroga a fondo sobre tu plan, una pregunta a la vez, antes del spec.",
-  "triggers": ["\"revisa mi plan\"", "\"cuestiona esto\"", "\"grill me\""],
+  "triggers": ["/grill-me", "\"/grill-me revisa mi plan\""],
   "diagram": {
     "kind": "steps",
     "nodes": [

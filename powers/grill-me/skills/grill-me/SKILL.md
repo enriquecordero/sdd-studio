@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Interview the user relentlessly about a plan or design, one question at a time, until every branch of the decision tree is resolved. Use when the user wants to stress-test a plan or says "grill me". En español: "cuestiona mi plan", "revisa mi plan a fondo", "hazme preguntas difíciles", "grill me".
+description: Invoke explicitly with /grill-me. Interview the user relentlessly about a plan or design, one question at a time, until every branch of the decision tree is resolved. Use when the user wants to stress-test a plan or says "grill me". En español: "cuestiona mi plan", "revisa mi plan a fondo", "hazme preguntas difíciles", "grill me".
 disable-model-invocation: true
 ---
 

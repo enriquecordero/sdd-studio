@@ -13,7 +13,7 @@
 - skills/engineering/prototype/UI.md → skills/prototype/UI.md
 
 ## Archivos excluidos
-- agents/openai.yaml — configuración específica de OpenAI (no existe en esta ruta del origen; se excluye por regla)
+- agents/openai.yaml — configuración específica de OpenAI
 
 ## Cambios de la adaptación
 - SKILL.md: la descripción del front matter se reescribe en una línea, con disparadores en español (según el brief).
