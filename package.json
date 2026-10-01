@@ -47,7 +47,113 @@
           "description": "Idioma en que los agentes redactan los specs. Las palabras clave EARS siempre van en inglés."
         }
       }
-    }
+    },
+    "languageModelTools": [
+      {
+        "name": "sdd_writeSpecDoc",
+        "toolReferenceName": "writeSpecDoc",
+        "displayName": "SDD: escribir documento de spec",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Crea o reemplaza un documento de un spec de SDD Studio (requirements, bugfix, design o tasks) en <specsFolder>/<spec>/. El documento queda en borrador (status: draft). Úsala SIEMPRE para escribir documentos de spec, nunca edites esos archivos directamente. Si reescribes un documento, los documentos posteriores que estaban aprobados vuelven a borrador. Envía el Markdown completo sin front matter.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string",
+              "description": "Nombre kebab-case del spec, ej. export-csv"
+            },
+            "doc": {
+              "type": "string",
+              "enum": [
+                "requirements",
+                "bugfix",
+                "design",
+                "tasks"
+              ]
+            },
+            "content": {
+              "type": "string",
+              "description": "Markdown completo del documento, sin front matter"
+            },
+            "folder": {
+              "type": "string",
+              "description": "Nombre de la carpeta del workspace. Solo si hay varias carpetas abiertas."
+            }
+          },
+          "required": [
+            "spec",
+            "doc",
+            "content"
+          ]
+        }
+      },
+      {
+        "name": "sdd_approvePhase",
+        "toolReferenceName": "approvePhase",
+        "displayName": "SDD: aprobar fase",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Marca como aprobado (status: approved) un documento de un spec de SDD Studio. Úsala solo cuando el usuario haya aprobado explícitamente ese documento (por ejemplo, con un botón de handoff). Falla si el documento no existe o si un documento anterior no está aprobado.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string"
+            },
+            "doc": {
+              "type": "string",
+              "enum": [
+                "requirements",
+                "bugfix",
+                "design",
+                "tasks"
+              ]
+            },
+            "folder": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "spec",
+            "doc"
+          ]
+        }
+      },
+      {
+        "name": "sdd_setTaskStatus",
+        "toolReferenceName": "setTaskStatus",
+        "displayName": "SDD: cambiar estado de tarea",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Cambia el estado de una tarea de tasks.md de un spec de SDD Studio: todo, in_progress o done. La tarea padre se recalcula sola. Marca done solo cuando el usuario lo confirme. Falla si tasks.md no está aprobado o si la tarea no existe.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string"
+            },
+            "taskId": {
+              "type": "string",
+              "description": "Id jerárquico, ej. 2.1"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "todo",
+                "in_progress",
+                "done"
+              ]
+            },
+            "folder": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "spec",
+            "taskId",
+            "status"
+          ]
+        }
+      }
+    ]
   },
   "scripts": {
     "build": "node esbuild.mjs",
