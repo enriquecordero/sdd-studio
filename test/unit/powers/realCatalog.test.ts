@@ -33,4 +33,26 @@ describe('catálogo real (powers/)', () => {
     }
     expect(text).not.toContain('@latest');
   });
+
+  it('el modo por defecto es de solo lectura y Operar se distingue', () => {
+    const { catalog } = buildCatalog(join(__dirname, '../../../powers'));
+    type Srv = { url?: string; env?: Record<string, string>; args?: string[] };
+    const mcp = (id: string) => {
+      const m = catalog.powers.find((p) => p.id === id)!.mcp!;
+      return {
+        def: Object.values(m.servers)[0] as Srv,
+        op: Object.values(m.operate!.servers)[0] as Srv,
+      };
+    };
+    const gh = mcp('github-mcp');
+    expect(gh.def.url).toMatch(/\/mcp\/readonly$/);
+    expect(gh.op.url).toBe('https://api.githubcopilot.com/mcp/');
+    const aws = mcp('aws');
+    expect(aws.def.env).toMatchObject({ READ_OPERATIONS_ONLY: 'true' });
+    expect(aws.op.env).not.toHaveProperty('READ_OPERATIONS_ONLY');
+    expect(aws.op.env).toMatchObject({ REQUIRE_MUTATION_CONSENT: 'true' });
+    const az = mcp('azure');
+    expect(az.def.args).toContain('--read-only');
+    expect(az.op.args).not.toContain('--read-only');
+  });
 });

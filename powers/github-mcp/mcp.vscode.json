@@ -26,6 +26,6 @@
         }
       }
     },
-    "warning": "Copilot podrá crear y comentar issues y pull requests, y lanzar workflows, con tu cuenta de GitHub. Revisa cada llamada antes de aprobarla."
+    "warning": "Copilot podrá crear y comentar issues y pull requests, fusionar PRs, escribir o borrar archivos y ramas en tus repos y lanzar workflows, con tu cuenta de GitHub. Revisa cada llamada antes de aprobarla."
   }
 }

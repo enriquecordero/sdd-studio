@@ -21,6 +21,7 @@ This Power adds the `sdd-github` MCP server, GitHub's remote server, limited to 
 ## Read-only by default
 - In the default mode the server only reads. Never try to create, comment, merge or re-run anything.
 - Only when the Power is in **Operate** mode *and* the user explicitly asks, you may write (comment, open an issue, create a PR). State exactly what you will do first and do one action at a time.
+- Never merge, push to the default branch, or delete files or branches unless the user explicitly asks for that specific action.
 
 ## If the tools are not available
 
