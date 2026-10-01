@@ -3,7 +3,7 @@
 Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.
 
 ## Instalar
-1. Descarga `sdd-studio-<versión>.vsix` del último Release interno.
+1. Descarga `sdd-studio-<versión>.vsix` del último [Release](https://github.com/enriquecordero/sdd-studio/releases).
 2. `code --install-extension sdd-studio-<versión>.vsix`
 3. Ejecuta **SDD Studio: Diagnóstico** y resuelve lo que indique.
 

@@ -8,7 +8,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/enriqueacordero/sdd-studio"
+    "url": "https://github.com/enriquecordero/sdd-studio"
   },
   "engines": {
     "vscode": "^1.140.0"
