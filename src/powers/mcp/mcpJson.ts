@@ -58,23 +58,34 @@ function findNode(root: Node | undefined, path: (string | number)[]): Node | und
 }
 
 /**
- * Borra el hijo `index` del objeto o lista en `path` junto con su coma, sin tocar el resto de bytes:
- * con hermano anterior se borra desde el final de ese hermano; si no, hasta el inicio del siguiente.
- * (`modify` también se come la coma final de un hermano ajeno, así que solo se usa si es el único hijo.)
+ * Borra el hijo `index` del objeto o lista en `path` sin tocar ningún otro byte ni comentario ajeno:
+ * 1. con hermano anterior unido solo por su coma, se borra esa coma y el nodo (deshace exactamente una inserción);
+ * 2. si no, se borra el nodo con su línea (y su coma, si la tiene), dejando intactos los comentarios vecinos.
+ * No usa `modify`: al borrar se come comas y comentarios de los hermanos.
  */
 function removeChild(text: string, path: (string | number)[], index: number): string {
-  const container = findNode(parseTree(text), path);
-  const kids = container?.children ?? [];
-  if (kids.length <= 1) {
-    const key = container?.type === 'object' ? (kids[0].children?.[0]?.value as string) : index;
-    return edit(text, [...path, key], undefined);
-  }
+  const kids = findNode(parseTree(text), path)?.children ?? [];
   const node = kids[index];
+  if (!node) return text;
+  const end = node.offset + node.length;
   const prev = kids[index - 1];
-  const next = kids[index + 1];
-  const [from, to] = prev ? [prev.offset + prev.length, node.offset + node.length] : [node.offset, next.offset];
-  return text.slice(0, from) + text.slice(to);
+  if (prev) {
+    const gap = text.slice(prev.offset + prev.length, node.offset);
+    const comma = /^\s*,\s*$/.test(gap) ? gap.indexOf(',') : -1;
+    if (comma >= 0) return text.slice(0, prev.offset + prev.length + comma) + text.slice(end);
+  }
+  const after = /^\s*,/.exec(text.slice(end));
+  const to = after ? end + after[0].length : end;
+  const lineStart = text.lastIndexOf('\n', node.offset - 1) + 1;
+  const alone = /^[ \t]*$/.test(text.slice(lineStart, node.offset));
+  const rest = /^[ \t]*\r?\n/.exec(text.slice(to));
+  if (alone && rest) return text.slice(0, lineStart) + text.slice(to + rest[0].length);
+  return text.slice(0, alone ? lineStart : node.offset) + text.slice(to);
 }
+
+/** Índice del hijo de `path` que cumple `match`, o -1. */
+const childIndex = (text: string, path: (string | number)[], match: (kid: Node) => boolean): number =>
+  (findNode(parseTree(text), path)?.children ?? []).findIndex(match);
 
 /** Hash estable de una entrada de servidor: no cambia si solo cambia el orden de las claves. */
 export function entryHash(server: unknown): string {
@@ -122,8 +133,7 @@ export function removeEntries(text: string | undefined, names: string[], inputId
   const servers = load(out).servers;
   for (const name of names) {
     if (!(name in servers)) continue;
-    const kids = findNode(parseTree(out), ['servers'])?.children ?? [];
-    out = removeChild(out, ['servers'], kids.findIndex((p) => p.children?.[0]?.value === name));
+    out = removeChild(out, ['servers'], childIndex(out, ['servers'], (p) => p.children?.[0]?.value === name));
   }
   const hadInputs = load(out).inputs.length;
   for (const id of inputIds) {
@@ -131,6 +141,10 @@ export function removeEntries(text: string | undefined, names: string[], inputId
     if (index >= 0) out = removeChild(out, ['inputs'], index);
   }
   // Si nuestra retirada vació "inputs", no dejamos `"inputs": []`; uno que ya estaba vacío se respeta.
-  if (hadInputs > 0 && load(out).inputs.length === 0) out = edit(out, ['inputs'], undefined);
+  if (hadInputs > 0 && load(out).inputs.length === 0) {
+    const arrayText = findNode(parseTree(out), ['inputs']);
+    const hasComment = arrayText !== undefined && /\/[/*]/.test(out.slice(arrayText.offset, arrayText.offset + arrayText.length));
+    if (!hasComment) out = removeChild(out, [], childIndex(out, [], (p) => p.children?.[0]?.value === 'inputs'));
+  }
   return out;
 }

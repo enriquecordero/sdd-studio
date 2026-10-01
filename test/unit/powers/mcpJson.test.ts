@@ -82,7 +82,7 @@ describe('mcpJson', () => {
     expect(added).toContain('// no tocar');
     const removed = removeEntries(added, ['sdd-aws', 'sdd-context7'], ['sdd_aws_region']);
     for (const piece of foreign) expect(removed, piece).toContain(piece);
-    expect(parse(removed)).toEqual(parse(MESSY));
+    expect(removed).toBe(MESSY);
   });
 
   it('add y remove sobre un archivo con solo entradas ajenas deja el texto idéntico', () => {
@@ -99,6 +99,42 @@ describe('mcpJson', () => {
     expect(parse(removeEntries(preEmpty, [], ['sdd_aws_region']))).toEqual({ servers: {}, inputs: [] });
     const withForeign = removeEntries(addEntries(FOREIGN, aws, [region]), ['sdd-aws'], ['sdd_aws_region']);
     expect(readInputIds(withForeign)).toEqual(['my_token']);
+  });
+
+  it('add y remove devuelven FOREIGN idéntico', () => {
+    expect(removeEntries(addEntries(FOREIGN, { ...aws, ...c7 }, [region]), ['sdd-aws', 'sdd-context7'], ['sdd_aws_region'])).toBe(FOREIGN);
+  });
+
+  describe('removeEntries conserva comentarios y validez en archivos ya existentes', () => {
+    const ours = '"sdd-context7": { "type": "http", "url": "https://mcp.context7.com/mcp" }';
+    const mine = '"mine": { "type": "stdio", "command": "my-server" }';
+    const remove = (text: string): string => removeEntries(text, ['sdd-context7'], []);
+
+    it('(a) el nuestro va primero y le sigue una entrada ajena con comentario', () => {
+      const out = remove(`{\n  "servers": {\n    ${ours},\n    // mi servidor\n    ${mine}\n  }\n}\n`);
+      expect(out).toBe(`{\n  "servers": {\n    // mi servidor\n    ${mine}\n  }\n}\n`);
+      expect(parse(out).servers).toEqual({ mine: { type: 'stdio', command: 'my-server' } });
+    });
+
+    it('(b) la entrada ajena anterior tiene un comentario al final', () => {
+      const out = remove(`{\n  "servers": {\n    ${mine}, // no tocar\n    ${ours}\n  }\n}\n`);
+      expect(out).toContain('// no tocar');
+      expect(parse(out).servers).toEqual({ mine: { type: 'stdio', command: 'my-server' } });
+    });
+
+    it('(c) el nuestro es el único y el archivo usa coma final', () => {
+      const out = remove(`{\n  "servers": {\n    ${ours},\n  },\n}\n`);
+      expect(parse(out)).toEqual({ servers: {} });
+      expect(isEmptyMcpFile(out)).toBe(true);
+    });
+
+    it('(g) el nuestro es el único y tiene un comentario ajeno encima', () => {
+      for (const comma of ['', ',']) {
+        const out = remove(`{\n  "servers": {\n    // aviso\n    ${ours}${comma}\n  }\n}\n`);
+        expect(out).toContain('// aviso');
+        expect(parse(out)).toEqual({ servers: {} });
+      }
+    });
   });
 
   it('readEntries devuelve solo las presentes', () => {
