@@ -153,7 +153,64 @@
           ]
         }
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sddStudio",
+          "title": "SDD Studio",
+          "icon": "media/sdd-studio.svg"
+        }
+      ]
+    },
+    "views": {
+      "sddStudio": [
+        {
+          "id": "sddStudio.specs",
+          "name": "Specs"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "sddStudio.newSpec",
+        "title": "Nuevo spec",
+        "category": "SDD Studio",
+        "icon": "$(add)",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "sddStudio.refresh",
+        "title": "Actualizar",
+        "category": "SDD Studio",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sddStudio.generateSteering",
+        "title": "Generar steering",
+        "category": "SDD Studio"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "sddStudio.newSpec",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sddStudio.refresh",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sddStudio.generateSteering",
+          "when": "view == sddStudio.specs && viewItem == section-steering"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "node esbuild.mjs",
