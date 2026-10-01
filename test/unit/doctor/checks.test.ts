@@ -46,4 +46,23 @@ describe('runChecks', () => {
     expect(failed.find((c) => c.id === 'strict-policy')!.severity).toBe('warning');
     expect(failed.find((c) => c.id === 'copilot-chat')!.severity).toBe('error');
   });
+  it('sesión de GitHub desconocida no es un problema (I2)', () => {
+    const session = runChecks({ ...healthy, githubSignedIn: 'unknown' }).find((c) => c.id === 'github-session')!;
+    expect(session).toMatchObject({
+      ok: true,
+      message: 'Sesión de GitHub no verificada (VS Code no lo permite sin permiso)',
+    });
+    expect(session.action).toBeUndefined();
+  });
+  it('solo una sesión ausente confirmada avisa', () => {
+    const session = runChecks({ ...healthy, githubSignedIn: false }).find((c) => c.id === 'github-session')!;
+    expect(session).toMatchObject({ ok: false, severity: 'warning' });
+    expect(runChecks(healthy).find((c) => c.id === 'github-session')!.message).toBe('Sesión de GitHub activa');
+  });
+  it('el aviso de la política estricta dice "puede impedir"', () => {
+    const strict = runChecks({ ...healthy, strictPluginOnly: true }).find((c) => c.id === 'strict-policy')!;
+    expect(strict.message).toBe(
+      'La política ChatStrictPluginOnlyCustomization está activa: puede impedir que se carguen las instructions de steering de .github/instructions (y, más adelante, los Powers del repo).',
+    );
+  });
 });

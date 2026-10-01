@@ -2,7 +2,8 @@ export interface DoctorEnv {
   vscodeVersion: string;
   minVersion: string;
   copilotChatInstalled: boolean;
-  githubSignedIn: boolean;
+  /** 'unknown' cuando VS Code no permite comprobarlo sin pedir permiso al usuario. */
+  githubSignedIn: boolean | 'unknown';
   agentModeEnabled: boolean;
   extensionToolsEnabled: boolean;
   strictPluginOnly: boolean;
@@ -28,6 +29,7 @@ export function compareVersions(a: string, b: string): number {
 
 export function runChecks(env: DoctorEnv): CheckResult[] {
   const versionOk = compareVersions(env.vscodeVersion, env.minVersion) >= 0;
+  const sessionMissing = env.githubSignedIn === false;
   return [
     {
       id: 'vscode-version',
@@ -45,10 +47,15 @@ export function runChecks(env: DoctorEnv): CheckResult[] {
     },
     {
       id: 'github-session',
-      ok: env.githubSignedIn,
+      ok: !sessionMissing,
       severity: 'warning',
-      message: env.githubSignedIn ? 'Sesión de GitHub activa' : 'No detecté una sesión de GitHub.',
-      action: env.githubSignedIn ? undefined : 'Inicia sesión en Copilot desde el icono de cuentas (abajo a la izquierda).',
+      message:
+        env.githubSignedIn === 'unknown'
+          ? 'Sesión de GitHub no verificada (VS Code no lo permite sin permiso)'
+          : env.githubSignedIn
+            ? 'Sesión de GitHub activa'
+            : 'No detecté una sesión de GitHub.',
+      action: sessionMissing ? 'Inicia sesión en Copilot desde el icono de cuentas (abajo a la izquierda).' : undefined,
     },
     {
       id: 'agent-mode',
@@ -71,7 +78,7 @@ export function runChecks(env: DoctorEnv): CheckResult[] {
       ok: !env.strictPluginOnly,
       severity: 'warning',
       message: env.strictPluginOnly
-        ? 'La política ChatStrictPluginOnlyCustomization está activa: no se cargarán las instructions de steering de .github/instructions (ni, más adelante, los Powers del repo).'
+        ? 'La política ChatStrictPluginOnlyCustomization está activa: puede impedir que se carguen las instructions de steering de .github/instructions (y, más adelante, los Powers del repo).'
         : 'Customizaciones de workspace permitidas',
       action: env.strictPluginOnly ? 'Pide a TI permitir customizaciones de workspace para SDD Studio.' : undefined,
     },
