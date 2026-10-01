@@ -1,0 +1,28 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: La etiqueta coincide con la versión de package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME#v}" != "$VERSION" ]; then
+            echo "::error::La etiqueta $GITHUB_REF_NAME no coincide con la versión de package.json ($VERSION)."
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npx vsce package --no-dependencies -o "sdd-studio-${GITHUB_REF_NAME#v}.vsix"
+      - run: gh release create "$GITHUB_REF_NAME" sdd-studio-*.vsix --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

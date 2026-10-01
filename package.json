@@ -1,0 +1,361 @@
+{
+  "name": "sdd-studio",
+  "displayName": "SDD Studio",
+  "description": "Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.",
+  "version": "0.1.0",
+  "publisher": "enriqueacordero",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enriquecordero/sdd-studio"
+  },
+  "engines": {
+    "vscode": "^1.140.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Themes"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "En workspaces no confiables no se pueden crear specs ni ejecutar tareas."
+    }
+  },
+  "contributes": {
+    "configuration": {
+      "title": "SDD Studio",
+      "properties": {
+        "sddStudio.specsFolder": {
+          "type": "string",
+          "default": "specs",
+          "description": "Carpeta (relativa a la raíz del workspace) donde viven los specs."
+        },
+        "sddStudio.language": {
+          "type": "string",
+          "enum": [
+            "es",
+            "en"
+          ],
+          "default": "es",
+          "description": "Idioma en que los agentes redactan los specs. Las palabras clave EARS siempre van en inglés."
+        }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "sdd_writeSpecDoc",
+        "toolReferenceName": "writeSpecDoc",
+        "displayName": "SDD: escribir documento de spec",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Crea o reemplaza un documento de un spec de SDD Studio (requirements, bugfix, design o tasks) en <specsFolder>/<spec>/. El documento queda en borrador (status: draft). Úsala SIEMPRE para escribir documentos de spec, nunca edites esos archivos directamente. Si reescribes un documento, los documentos posteriores que estaban aprobados vuelven a borrador. Envía el Markdown completo sin front matter.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string",
+              "description": "Nombre kebab-case del spec, ej. export-csv"
+            },
+            "doc": {
+              "type": "string",
+              "enum": [
+                "requirements",
+                "bugfix",
+                "design",
+                "tasks"
+              ]
+            },
+            "content": {
+              "type": "string",
+              "description": "Markdown completo del documento, sin front matter"
+            },
+            "folder": {
+              "type": "string",
+              "description": "Nombre de la carpeta del workspace. Solo si hay varias carpetas abiertas."
+            }
+          },
+          "required": [
+            "spec",
+            "doc",
+            "content"
+          ]
+        }
+      },
+      {
+        "name": "sdd_approvePhase",
+        "toolReferenceName": "approvePhase",
+        "displayName": "SDD: aprobar fase",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Marca como aprobado (status: approved) un documento de un spec de SDD Studio. Úsala solo cuando el usuario haya aprobado explícitamente ese documento (por ejemplo, con un botón de handoff). Falla si el documento no existe o si un documento anterior no está aprobado.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string"
+            },
+            "doc": {
+              "type": "string",
+              "enum": [
+                "requirements",
+                "bugfix",
+                "design",
+                "tasks"
+              ]
+            },
+            "folder": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "spec",
+            "doc"
+          ]
+        }
+      },
+      {
+        "name": "sdd_setTaskStatus",
+        "toolReferenceName": "setTaskStatus",
+        "displayName": "SDD: cambiar estado de tarea",
+        "canBeReferencedInPrompt": true,
+        "modelDescription": "Cambia el estado de una tarea de tasks.md de un spec de SDD Studio: todo, in_progress o done. La tarea padre se recalcula sola. Marca done solo cuando el usuario lo confirme. Falla si tasks.md no está aprobado o si la tarea no existe.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "string"
+            },
+            "taskId": {
+              "type": "string",
+              "description": "Id jerárquico, ej. 2.1"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "todo",
+                "in_progress",
+                "done"
+              ]
+            },
+            "folder": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "spec",
+            "taskId",
+            "status"
+          ]
+        }
+      }
+    ],
+    "chatAgents": [
+      {
+        "path": "./agents/sdd-requirements.agent.md"
+      },
+      {
+        "path": "./agents/sdd-design.agent.md"
+      },
+      {
+        "path": "./agents/sdd-tasks.agent.md"
+      },
+      {
+        "path": "./agents/sdd-implement.agent.md"
+      },
+      {
+        "path": "./agents/sdd-steering.agent.md"
+      }
+    ],
+    "chatPromptFiles": [
+      {
+        "path": "./prompts/spec-new.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-bugfix.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-run.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-steering.prompt.md"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sddStudio",
+          "title": "SDD Studio",
+          "icon": "media/sdd-studio.svg"
+        }
+      ]
+    },
+    "views": {
+      "sddStudio": [
+        {
+          "id": "sddStudio.specs",
+          "name": "Specs"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "sddStudio.newSpec",
+        "title": "Nuevo spec",
+        "category": "SDD Studio",
+        "icon": "$(add)",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "sddStudio.refresh",
+        "title": "Actualizar",
+        "category": "SDD Studio",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sddStudio.generateSteering",
+        "title": "Generar steering",
+        "category": "SDD Studio"
+      },
+      {
+        "command": "sddStudio.runTask",
+        "title": "Ejecutar tarea",
+        "category": "SDD Studio",
+        "icon": "$(play)",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "sddStudio.markTaskDone",
+        "title": "Marcar tarea hecha",
+        "category": "SDD Studio",
+        "icon": "$(check)"
+      },
+      {
+        "command": "sddStudio.approveAndContinue",
+        "title": "Aprobar y continuar",
+        "category": "SDD Studio",
+        "icon": "$(pass)"
+      },
+      {
+        "command": "sddStudio.openRequirements",
+        "title": "Ver requisitos",
+        "category": "SDD Studio"
+      },
+      {
+        "command": "sddStudio.doctor",
+        "title": "Diagnóstico",
+        "category": "SDD Studio",
+        "icon": "$(pulse)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "sddStudio.newSpec",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sddStudio.refresh",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@2"
+        },
+        {
+          "command": "sddStudio.doctor",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sddStudio.generateSteering",
+          "when": "view == sddStudio.specs && viewItem == section-steering"
+        },
+        {
+          "command": "sddStudio.approveAndContinue",
+          "when": "view == sddStudio.specs && viewItem == doc-approvable",
+          "group": "inline"
+        },
+        {
+          "command": "sddStudio.approveAndContinue",
+          "when": "view == sddStudio.specs && viewItem == doc-approvable",
+          "group": "sdd@1"
+        },
+        {
+          "command": "sddStudio.runTask",
+          "when": "view == sddStudio.specs && viewItem == task-todo",
+          "group": "inline@1"
+        },
+        {
+          "command": "sddStudio.runTask",
+          "when": "view == sddStudio.specs && viewItem == task-todo",
+          "group": "sdd@1"
+        },
+        {
+          "command": "sddStudio.markTaskDone",
+          "when": "view == sddStudio.specs && viewItem =~ /^task-(todo|in_progress)$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "sddStudio.markTaskDone",
+          "when": "view == sddStudio.specs && viewItem =~ /^task-(todo|in_progress)$/",
+          "group": "sdd@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sddStudio.runTask",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.markTaskDone",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.approveAndContinue",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.openRequirements",
+          "when": "false"
+        }
+      ]
+    },
+    "themes": [
+      {
+        "label": "SDD Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/sdd-studio-dark-color-theme.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "vscode:prepublish": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
+    "test:unit": "vitest run",
+    "compile:tests": "tsc -p tsconfig.test.json",
+    "test:integration": "npm run build && npm run compile:tests && vscode-test",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.6.3",
+    "@types/vscode": "1.138.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.11.0",
+    "mocha": "^12.0.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}
