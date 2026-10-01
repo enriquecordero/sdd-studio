@@ -1,4 +1,5 @@
 import type { PowerStatus } from '../lock';
+import type { McpMode } from '../mcp/spec';
 import { CatalogPower } from '../types';
 import { renderPoster } from './card';
 import { escapeHtml as e } from './escape';
@@ -7,7 +8,9 @@ import { speccySvg } from './speccy';
 import { POWERS_CSS } from './styles';
 
 export interface GalleryDocInput {
-  views: { power: CatalogPower; status: PowerStatus }[];
+  views: { power: CatalogPower; status: PowerStatus; mode?: McpMode }[];
+  /** Razón del bloqueo de MCP por política (undefined si se permite). */
+  mcpBlocked?: string;
   strict: boolean;
   hasFolder: boolean;
   error?: string;
@@ -31,14 +34,15 @@ const GALLERY_SCRIPT = `(function(){
     var id = t.getAttribute('data-id');
     if (action === 'detail') { show(id); return; }
     if (action === 'back') { show(null); return; }
-    vscode.postMessage({ type: action, id: id });
+    vscode.postMessage({ type: action, id: id, mode: t.getAttribute('data-mode') });
   });
 })();`;
 
 export function renderGalleryDocument(input: GalleryDocInput): string {
-  const { views, strict, hasFolder, error, nonce, cspSource } = input;
+  const { views, strict, hasFolder, error, nonce, cspSource, mcpBlocked } = input;
   const powers = views.map((v) => v.power);
   const statuses = Object.fromEntries(views.map((v) => [v.power.id, v.status]));
+  const modes = Object.fromEntries(views.flatMap((v) => (v.mode ? [[v.power.id, v.mode]] : [])));
   const csp = `default-src 'none'; img-src ${cspSource} data:; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';`;
   const banners =
     (strict
@@ -50,7 +54,7 @@ export function renderGalleryDocument(input: GalleryDocInput): string {
     .map(
       (p) =>
         `<div class="pw-detail" data-detail="${e(p.id)}" hidden><button class="pw-link" data-action="back">← Volver</button>` +
-        `${renderPoster(p, { status: statuses[p.id], actions: hasFolder })}</div>`,
+        `${renderPoster(p, { status: statuses[p.id], mode: modes[p.id], blocked: mcpBlocked, actions: hasFolder })}</div>`,
     )
     .join('');
   return (
@@ -61,7 +65,7 @@ export function renderGalleryDocument(input: GalleryDocInput): string {
     `<body class="pw-root"><main class="pw-wrap">${banners}` +
     `<div id="pw-grid-view"><header class="pw-hero">${speccySvg('gallery', 84)}<h1>⚡ Powers</h1>` +
     `<p>Skills de la comunidad, adaptados para GitHub Copilot. Se cargan solos cuando tu pedido coincide con su descripción.</p>` +
-    `${renderFilters(powers)}</header>${renderGrid(powers, { statuses, actions: hasFolder })}</div>` +
+    `${renderFilters(powers)}</header>${renderGrid(powers, { statuses, modes, blocked: mcpBlocked, actions: hasFolder })}</div>` +
     `${details}</main><script nonce="${nonce}">${FILTER_SCRIPT}${GALLERY_SCRIPT}</script></body></html>`
   );
 }

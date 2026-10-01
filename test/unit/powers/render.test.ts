@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { renderCard, renderPoster } from '../../../src/powers/render/card';
+import { renderActions, renderCard, renderMcpStrip, renderPoster } from '../../../src/powers/render/card';
 import { renderDiagram } from '../../../src/powers/render/diagram';
 import { escapeHtml } from '../../../src/powers/render/escape';
-import { renderGrid, renderTeaserChips } from '../../../src/powers/render/gallery';
+import { FILTER_SCRIPT, renderFilters, renderGrid, renderTeaserChips } from '../../../src/powers/render/gallery';
 import { speccySvg } from '../../../src/powers/render/speccy';
 import { renderGalleryDocument } from '../../../src/powers/render/webview';
-import { power, presentation } from '../../support/powerFixtures';
+import { mcpPower, mcpSpec, power, presentation } from '../../support/powerFixtures';
 
 const count = (html: string, needle: string) => html.split(needle).length - 1;
 
@@ -181,5 +181,99 @@ describe('documento del webview', () => {
   it('incluye a Speccy en la cabecera', () => {
     expect(renderGalleryDocument(base)).toContain('aria-label="Speccy');
     expect(speccySvg('a')).toContain('speccy-g-a');
+  });
+});
+
+describe('Powers con MCP', () => {
+  const cloudy = mcpPower('cloudy');
+  const remote = mcpPower(
+    'docsy',
+    mcpSpec({ prerequisites: [], inputs: [], servers: { 'sdd-docs': { type: 'http', url: 'https://docs.example.com/mcp' } }, approxTools: { 'sdd-docs': 2 }, beta: true, credentials: 'Ninguna', operate: undefined }),
+  );
+
+  it('distintivo 🔌 MCP y data-mcp en la tarjeta; nada en un Power sin MCP', () => {
+    const html = renderCard(cloudy, { actions: false });
+    expect(html).toContain('🔌 MCP');
+    expect(html).toContain('data-mcp="1"');
+    expect(html).toContain('sdd-x');
+    const plain = renderCard(power('alpha'), { actions: false });
+    expect(plain).not.toContain('🔌 MCP');
+    expect(plain).toContain('data-mcp="0"');
+  });
+
+  it('chip de filtro "Con MCP" solo si hay Powers con MCP, y el script lo entiende', () => {
+    expect(renderFilters([power('alpha'), cloudy])).toContain('data-filter="mcp"');
+    expect(renderFilters([power('alpha')])).not.toContain('data-filter="mcp"');
+    expect(FILTER_SCRIPT).toContain("state.cat === 'mcp'");
+  });
+
+  it('las categorías nuevas aparecen en orden: Dev core, Documentación, Cloud', () => {
+    const cat = (id: string, category: 'devcore' | 'docs' | 'cloud') => ({ ...power(id), presentation: presentation({ category }) });
+    const html = renderFilters([cat('c', 'cloud'), cat('a', 'devcore'), cat('b', 'docs')]);
+    expect(html.indexOf('Dev core')).toBeLessThan(html.indexOf('Documentación'));
+    expect(html.indexOf('Documentación')).toBeLessThan(html.indexOf('>Cloud<'));
+  });
+
+  it('franja MCP: local con su comando, prerrequisitos, credenciales y modo Operar', () => {
+    const html = renderPoster(cloudy, { actions: false });
+    expect(html).toContain('SERVIDORES MCP');
+    expect(html).toContain('<code>sdd-x</code> <span class="pw-kind pw-local">local</span> ejecuta código en tu máquina: <code>uvx x-mcp-server@1.0.0</code>');
+    expect(html).toContain('Prerrequisitos: uv');
+    expect(html).toContain('Credenciales: Perfil local');
+    expect(html).toContain('modo Operar opcional');
+    expect(html).not.toContain('pw-beta');
+  });
+
+  it('franja MCP: remoto con su host y beta', () => {
+    const html = renderMcpStrip(remote);
+    expect(html).toContain('<span class="pw-kind">remoto</span> docs.example.com');
+    expect(html).toContain('Prerrequisitos: ninguno');
+    expect(html).toContain('<span class="pw-beta">beta</span>');
+    expect(renderMcpStrip(power('alpha'))).toBe('');
+  });
+
+  it('escapa los textos de mcp', () => {
+    const evil = mcpPower('evil', mcpSpec({ credentials: '<img src=x onerror=alert(1)>' }));
+    const html = renderPoster(evil, { actions: false });
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+  });
+
+  it('selector de modo en un Power activo con operate; Operar resaltado en tono warn', () => {
+    const ro = renderActions(cloudy, 'active', { mode: 'readOnly' });
+    expect(ro).toContain('data-action="setMode" data-id="cloudy" data-mode="operate"');
+    expect(ro).toMatch(/class="pw-seg pw-on" data-action="setMode" data-id="cloudy" data-mode="readOnly" aria-pressed="true">Solo lectura/);
+    const op = renderActions(cloudy, 'active', { mode: 'operate' });
+    expect(op).toMatch(/class="pw-seg pw-on pw-warn" data-action="setMode" data-id="cloudy" data-mode="operate" aria-pressed="true">Operar/);
+    expect(renderActions(remote, 'active', { mode: 'readOnly' })).not.toContain('setMode');
+    expect(renderActions(cloudy, 'available', { mode: 'readOnly' })).not.toContain('setMode');
+  });
+
+  it('política bloqueada: botón 🔒 deshabilitado con la razón y enlace al diagnóstico', () => {
+    const html = renderActions(cloudy, 'available', { blocked: 'chat.mcp.access = none' });
+    expect(html).toContain('🔒 Bloqueado por tu organización');
+    expect(html).toContain('disabled');
+    expect(html).toContain('chat.mcp.access = none');
+    expect(html).toContain('data-action="doctor"');
+    expect(html).not.toContain('data-action="activate"');
+    expect(renderActions(power('alpha'), 'available', { blocked: 'x' })).toContain('data-action="activate"');
+    expect(renderActions(cloudy, 'active', { blocked: 'x' })).toContain('data-action="deactivate"');
+  });
+
+  it('el webview pasa modo y bloqueo a tarjetas y pósters, y envía data-mode', () => {
+    const html = renderGalleryDocument({
+      views: [
+        { power: cloudy, status: 'active', mode: 'operate' },
+        { power: remote, status: 'available' },
+      ],
+      strict: false,
+      hasFolder: true,
+      mcpBlocked: 'chat.mcp.access = none',
+      nonce: 'N',
+      cspSource: 'vscode-resource:',
+    });
+    expect(count(html, 'pw-on pw-warn')).toBe(2);
+    expect(count(html, '🔒 Bloqueado por tu organización')).toBe(2);
+    expect(html).toContain("mode: t.getAttribute('data-mode')");
   });
 });

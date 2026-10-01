@@ -71,4 +71,26 @@ describe('PowersService y comandos con MCP', () => {
   it('el comando sddStudio.setPowerMode está registrado', async () => {
     assert.ok((await vscode.commands.getCommands(true)).includes('sddStudio.setPowerMode'));
   });
+
+  it('la galería muestra el selector de modo y su mensaje setMode cambia el modo', async () => {
+    const { powers, gallery } = await getApi();
+    await powers.activate('cloudy', ws(), async () => true);
+    await vscode.commands.executeCommand('sddStudio.openPowers');
+    await gallery.render();
+    assert.match(gallery.html!, /data-action="setMode" data-id="cloudy" data-mode="operate"/);
+    assert.match(gallery.html!, /🔌 MCP/);
+    const modeOf = async () => (await powers.views(ws())).find((v) => v.power.id === 'cloudy')!.mode;
+    const original = vscode.window.showWarningMessage;
+    // Acepta el modal de Operar (devuelve el primer botón).
+    (vscode.window as { showWarningMessage: unknown }).showWarningMessage = async (_m: string, _o: unknown, button: string) => button;
+    try {
+      await gallery.handleMessage({ type: 'setMode', id: 'cloudy', mode: 'operate' });
+    } finally {
+      (vscode.window as { showWarningMessage: unknown }).showWarningMessage = original;
+    }
+    assert.strictEqual(await modeOf(), 'operate');
+    await gallery.handleMessage({ type: 'setMode', id: 'cloudy', mode: 'readOnly' });
+    assert.strictEqual(await modeOf(), 'readOnly');
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  });
 });
