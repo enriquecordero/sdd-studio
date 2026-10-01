@@ -154,6 +154,19 @@
         }
       }
     ],
+    "chatAgents": [
+      { "path": "./agents/sdd-requirements.agent.md" },
+      { "path": "./agents/sdd-design.agent.md" },
+      { "path": "./agents/sdd-tasks.agent.md" },
+      { "path": "./agents/sdd-implement.agent.md" },
+      { "path": "./agents/sdd-steering.agent.md" }
+    ],
+    "chatPromptFiles": [
+      { "path": "./prompts/spec-new.prompt.md" },
+      { "path": "./prompts/spec-bugfix.prompt.md" },
+      { "path": "./prompts/spec-run.prompt.md" },
+      { "path": "./prompts/spec-steering.prompt.md" }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
