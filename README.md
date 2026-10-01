@@ -10,10 +10,12 @@ Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.
 Requisitos: VS Code ≥ la versión de `engines.vscode`, GitHub Copilot Chat con sesión iniciada y agent mode habilitado.
 
 ## Flujo
-1. Panel **SDD Studio → Specs → Nuevo spec** (feature o bugfix).
-2. `sdd-requirements` escribe `specs/<spec>/requirements.md`. Revisa y pulsa **✓ Aprobar requisitos → Diseño** (o la CodeLens "✓ Aprobar y continuar").
+1. Pulsa **+ Nuevo spec** en el panel ⚡ (o elige el agente **sdd-spec** en Copilot Chat) y escribe tu idea, por ejemplo "quiero hacer el juego de Snake".
+2. `sdd-spec` te pregunta el tipo con una tarjeta (**Construir una funcionalidad**, **Arreglar un bug** o **Quick Spec**), elige el nombre y delega en el subagente `sdd-requirements`, que escribe `specs/<spec>/requirements.md`. Revisa y pulsa **✓ Aprobar requisitos → Diseño** (o la CodeLens "✓ Aprobar y continuar").
 3. `sdd-design` escribe `design.md` → apruebas → `sdd-tasks` escribe `tasks.md` → apruebas.
 4. En `tasks.md`, pulsa **▶ Ejecutar tarea** en cada tarea. Al terminar, **✓ Marcar hecha**.
+
+**Quick Spec** genera requisitos, diseño y tareas de una vez (sin aprobar cada fase) y deja el spec listo para implementar. Atajos en el chat: `/spec-new`, `/spec-bugfix`, `/spec-quick`.
 
 Steering del proyecto: **Generar steering** (crea `.github/instructions/{product,tech,structure}.instructions.md`).
 

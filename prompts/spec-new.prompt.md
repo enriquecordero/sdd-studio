@@ -1,8 +1,7 @@
 ---
 name: spec-new
-description: SDD Studio — crear un spec de feature
-agent: sdd-requirements
+description: SDD Studio — crear un spec de funcionalidad
+agent: sdd-spec
 argument-hint: <qué quieres construir>
 ---
-Crea un spec de **feature** para lo siguiente: ${input:descripcion}
-Elige un nombre kebab-case corto para el spec y escribe requirements.md con writeSpecDoc.
+Crea un spec de **funcionalidad** (no preguntes el tipo) para lo siguiente: ${input:descripcion}

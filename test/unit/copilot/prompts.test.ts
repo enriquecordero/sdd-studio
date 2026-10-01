@@ -1,21 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { newSpecPrompt, nextPhasePrompt, runTaskPrompt, steeringPrompt } from '../../../src/copilot/prompts';
-
-describe('newSpecPrompt', () => {
-  it('feature en español', () => {
-    const p = newSpecPrompt({ spec: 'export-csv', type: 'feature', description: 'Exportar pedidos', language: 'es' });
-    expect(p).toContain('Crea el spec "export-csv" (feature).');
-    expect(p).toContain('Descripción: Exportar pedidos');
-    expect(p).toContain('writeSpecDoc (spec="export-csv", doc="requirements")');
-    expect(p).toContain('Redacta en español');
-  });
-  it('bugfix con carpeta y en inglés', () => {
-    const p = newSpecPrompt({ spec: 'timeout-api', folder: 'api', type: 'bugfix', description: '', language: 'en' });
-    expect(p).toContain('doc="bugfix", folder="api"');
-    expect(p).toContain('(sin descripción: pregúntame)');
-    expect(p).toContain('Write the document in English');
-  });
-});
+import { nextPhasePrompt, runTaskPrompt, steeringPrompt } from '../../../src/copilot/prompts';
 
 describe('runTaskPrompt', () => {
   it('incluye tarea, criterios y referencias #file', () => {

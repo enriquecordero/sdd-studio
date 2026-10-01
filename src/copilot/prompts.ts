@@ -1,6 +1,6 @@
 import type { DocKind, SpecType } from '../specs/phase';
 
-export type AgentName = 'sdd-requirements' | 'sdd-design' | 'sdd-tasks' | 'sdd-implement' | 'sdd-steering';
+export type AgentName = 'sdd-spec' | 'sdd-requirements' | 'sdd-design' | 'sdd-tasks' | 'sdd-implement' | 'sdd-steering';
 export type Language = 'es' | 'en';
 
 function languageLine(language: Language): string {
@@ -11,16 +11,6 @@ function languageLine(language: Language): string {
 
 function folderArg(folder?: string): string {
   return folder ? `, folder="${folder}"` : '';
-}
-
-export function newSpecPrompt(p: { spec: string; folder?: string; type: SpecType; description: string; language: Language }): string {
-  const doc = p.type === 'bugfix' ? 'bugfix' : 'requirements';
-  return [
-    `Crea el spec "${p.spec}" (${p.type}).`,
-    `Descripción: ${p.description.trim() || '(sin descripción: pregúntame)'}`,
-    `Escribe ${doc}.md con la herramienta writeSpecDoc (spec="${p.spec}", doc="${doc}"${folderArg(p.folder)}).`,
-    languageLine(p.language),
-  ].join('\n');
 }
 
 export function runTaskPrompt(p: {
