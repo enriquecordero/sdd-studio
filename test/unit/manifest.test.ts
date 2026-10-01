@@ -91,9 +91,10 @@ describe('manifiesto', () => {
     expect(readFileSync(join(root, 'media', 'speccy.svg'), 'utf8')).toContain('aria-label="Speccy');
   });
 
-  it('el icono de la barra lateral es monocromo (currentColor) con forma de documento', () => {
+  it('el icono de la barra lateral es el rayo monocromo (currentColor)', () => {
     const svg = readFileSync(join(root, 'media', 'sdd-studio.svg'), 'utf8');
     expect(svg).toContain('currentColor');
     expect(svg).not.toMatch(/#[0-9a-fA-F]{3,6}/);
+    expect(svg).toContain('M13 2 4 14h6l-1 8 9-12h-6l1-8z');
   });
 });

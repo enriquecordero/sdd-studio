@@ -19,7 +19,7 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 - [ ] `/spec-new`, `/spec-bugfix`, `/spec-run`, `/spec-steering` aparecen en el chat.
 
 ## Powers (v0.3.0)
-- [ ] El icono de la barra lateral es el documento de Speccy y el Marketplace muestra el icono PNG.
+- [ ] El icono de la barra lateral es el rayo ⚡ y el Marketplace muestra el icono PNG de Speccy.
 - [ ] Panel ⚡ → Powers → "Abrir galería…" abre la pestaña con Speccy, filtros y 10 tarjetas.
 - [ ] "Ver detalle" muestra el póster (chips, diagrama, beneficios, origen) y "← Volver" regresa.
 - [ ] "+ Activar en este repo" en TDD crea `.github/skills/tdd/` y `.github/powers.lock.json`; la tarjeta pasa a "✓ Activo".
