@@ -17,6 +17,13 @@ export default tseslint.config(
       'src/ui/labels.ts',
       'src/ui/lensModel.ts',
       'src/doctor/checks.ts',
+      'src/powers/types.ts',
+      'src/powers/hash.ts',
+      'src/powers/catalog.ts',
+      'src/powers/lock.ts',
+      'src/powers/validateSource.ts',
+      'src/powers/fetcher.ts',
+      'src/powers/render/**/*.ts',
     ],
     rules: {
       'no-restricted-imports': ['error', { paths: [{ name: 'vscode', message: 'Módulo puro: no importes vscode.' }] }],
