@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activationDetail, overwriteQuestion } from '../../../src/powers/mcp/messages';
+import { activationDetail, activatedMcpMessage, overwriteQuestion } from '../../../src/powers/mcp/messages';
 import { mcpSpec } from '../../support/powerFixtures';
 
 describe('activationDetail', () => {
@@ -52,5 +52,20 @@ describe('overwriteQuestion', () => {
     expect(overwriteQuestion('MCP_EDITED', 'AWS', 'aws', 'deactivate')).toBe(
       '"AWS" tiene cambios hechos a mano en sus servidores en .vscode/mcp.json. ¿Desactivarlo y descartar esos cambios?',
     );
+  });
+});
+
+describe('activatedMcpMessage', () => {
+  it('pide commitear .github y .vscode/mcp.json si no está ignorado', () => {
+    const text = activatedMcpMessage('AWS', ['sdd-aws', 'sdd-aws-docs'], false);
+    expect(text).toBe(
+      'SDD Studio: listo. "AWS" añadió sdd-aws, sdd-aws-docs a .vscode/mcp.json. VS Code te pedirá confiar e iniciar el servidor. Commitea .github y .vscode/mcp.json para compartirlo.',
+    );
+  });
+  it('si .gitignore ignora .vscode/mcp.json, avisa en lugar de pedir el commit', () => {
+    const text = activatedMcpMessage('AWS', ['sdd-aws'], true);
+    expect(text).toContain('añadió sdd-aws a .vscode/mcp.json');
+    expect(text).toContain('⚠️ .vscode/mcp.json está ignorado por git: añade `!.vscode/mcp.json` a .gitignore o tu equipo no recibirá los servidores.');
+    expect(text).not.toContain('Commitea .github y .vscode/mcp.json');
   });
 });

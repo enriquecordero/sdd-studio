@@ -10,6 +10,35 @@ const never = async (): Promise<boolean> => {
   throw new Error('no debe pedir confirmación');
 };
 
+type WindowFn = (...args: never[]) => unknown;
+
+/** Sustituye métodos de vscode.window mientras corre `fn` y los restaura después. */
+async function withWindow(stubs: Record<string, WindowFn>, fn: () => Promise<void>): Promise<void> {
+  const w = vscode.window as unknown as Record<string, unknown>;
+  const saved = Object.fromEntries(Object.keys(stubs).map((k) => [k, w[k]]));
+  Object.assign(w, stubs);
+  try {
+    await fn();
+  } finally {
+    Object.assign(w, saved);
+  }
+}
+
+/** Activa `id` con el comando, aceptando el modal, y devuelve los mensajes informativos mostrados. */
+async function activateViaCommand(id: string): Promise<string[]> {
+  const infos: string[] = [];
+  await withWindow(
+    {
+      showWarningMessage: (async (_q: string, _o: unknown, button: string) => button) as WindowFn,
+      showInformationMessage: (async (m: string) => (infos.push(m), undefined)) as WindowFn,
+    },
+    async () => {
+      await vscode.commands.executeCommand('sddStudio.activatePower', id);
+    },
+  );
+  return infos;
+}
+
 describe('PowersService y comandos con MCP', () => {
   beforeEach(async () => {
     await restoreFixture();
@@ -66,6 +95,55 @@ describe('PowersService y comandos con MCP', () => {
     assert.strictEqual(await powers.update('cloudy', ws(), never, async (mcp) => (asked.push(mcp), false)), 'cancelled');
     assert.deepStrictEqual(asked, [v2spec]);
     assert.strictEqual(await readWs('.vscode/mcp.json'), before);
+  });
+
+  describe('aviso de .gitignore al activar con el comando', () => {
+    let gitignore: string;
+    beforeEach(async () => {
+      gitignore = await readWs('.gitignore');
+    });
+    afterEach(async () => {
+      await writeWs('.gitignore', gitignore);
+    });
+
+    it('si .gitignore ignora .vscode/mcp.json, avisa en lugar de pedir el commit', async () => {
+      await writeWs('.gitignore', '.vscode/*\n');
+      const infos = await activateViaCommand('cloudy');
+      assert.strictEqual(infos.length, 1);
+      assert.match(infos[0], /añadió sdd-x a \.vscode\/mcp\.json/);
+      assert.ok(infos[0].includes('⚠️ .vscode/mcp.json está ignorado por git: añade `!.vscode/mcp.json` a .gitignore o tu equipo no recibirá los servidores.'));
+      assert.ok(!infos[0].includes('Commitea .github y .vscode/mcp.json'));
+    });
+
+    it('si no lo ignora, pide commitear .github y .vscode/mcp.json', async () => {
+      await writeWs('.gitignore', '.vscode/*\n!.vscode/mcp.json\n');
+      const infos = await activateViaCommand('cloudy');
+      assert.strictEqual(infos.length, 1);
+      assert.ok(infos[0].includes('Commitea .github y .vscode/mcp.json para compartirlo.'));
+      assert.ok(!infos[0].includes('⚠️'));
+    });
+  });
+
+  it('un MCP_FILE_INVALID no se convierte en otro error si no se puede abrir el archivo', async () => {
+    await writeWs('.vscode/mcp.json', '{ roto');
+    const errors: string[] = [];
+    let opened = 0;
+    await withWindow(
+      {
+        showWarningMessage: (async (_q: string, _o: unknown, button: string) => button) as WindowFn,
+        showErrorMessage: (async (m: string) => (errors.push(m), undefined)) as WindowFn,
+        showTextDocument: (async () => {
+          opened++;
+          throw new Error('no se puede abrir');
+        }) as WindowFn,
+      },
+      async () => {
+        await vscode.commands.executeCommand('sddStudio.activatePower', 'cloudy');
+      },
+    );
+    assert.strictEqual(opened, 1);
+    assert.strictEqual(errors.length, 1);
+    assert.match(errors[0], /^SDD Studio: /);
   });
 
   it('el comando sddStudio.setPowerMode está registrado', async () => {

@@ -2,13 +2,14 @@ import * as vscode from 'vscode';
 import { SpecStore } from '../workspace/specStore';
 import { GalleryController } from './galleryPanel';
 import { PowerError } from './installer';
-import { activationDetail, overwriteQuestion } from './mcp/messages';
+import { isIgnoredBy } from './mcp/gitignore';
+import { activatedMcpMessage, activationDetail, overwriteQuestion } from './mcp/messages';
 import { findOnPath } from './mcp/prereqs';
 import { MCP_MODES, McpMode, McpSpec, MODE_LABELS, Prerequisite, PREREQUISITES } from './mcp/spec';
 import { PowersService } from './powersService';
 import { CatalogPower } from './types';
 
-/** Comando de VS Code que lista los servidores MCP. Fijado por el spike (Tarea 0, comprobación 3). */
+/** Comando de VS Code que lista los servidores MCP. Provisional: pendiente de confirmar en el spike (Tarea 0, comprobación 3). */
 export const MCP_LIST_SERVERS_COMMAND = 'workbench.mcp.listServer';
 
 export interface PowersDeps {
@@ -49,7 +50,13 @@ async function guarded(fn: () => Promise<void>): Promise<void> {
         return;
       }
       void vscode.window.showErrorMessage(`SDD Studio: ${e.message}`);
-      if (e.fileUri) await vscode.window.showTextDocument(e.fileUri);
+      if (e.fileUri) {
+        try {
+          await vscode.window.showTextDocument(e.fileUri);
+        } catch {
+          // Si no se puede abrir el archivo, basta con el mensaje de error.
+        }
+      }
       return;
     }
     throw e;
@@ -60,6 +67,16 @@ function requireTrust(): boolean {
   if (vscode.workspace.isTrusted) return true;
   void vscode.window.showWarningMessage('SDD Studio: confía en este workspace para activar o actualizar Powers.');
   return false;
+}
+
+/** ¿El `.gitignore` de la raíz de `folder` ignora `.vscode/mcp.json`? Sin `.gitignore` (o si no se puede leer), no. */
+async function mcpJsonIgnored(folder: vscode.WorkspaceFolder): Promise<boolean> {
+  try {
+    const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(vscode.Uri.joinPath(folder.uri, '.gitignore')));
+    return isIgnoredBy(text, '.vscode/mcp.json');
+  } catch {
+    return false;
+  }
 }
 
 async function confirmModal(question: string, button: string, detail?: string): Promise<boolean> {
@@ -134,7 +151,7 @@ export function registerPowerCommands(deps: PowersDeps): vscode.Disposable {
           return;
         }
         const pick = await vscode.window.showInformationMessage(
-          `SDD Studio: listo. "${p.presentation.displayName}" añadió ${Object.keys(p.mcp.servers).join(', ')} a .vscode/mcp.json. VS Code te pedirá confiar e iniciar el servidor. Commitea .github y .vscode/mcp.json para compartirlo.`,
+          activatedMcpMessage(p.presentation.displayName, Object.keys(p.mcp.servers), await mcpJsonIgnored(folder)),
           'Ver servidores MCP',
         );
         if (pick) await vscode.commands.executeCommand(MCP_LIST_SERVERS_COMMAND);
@@ -152,7 +169,7 @@ export function registerPowerCommands(deps: PowersDeps): vscode.Disposable {
           (reason) => confirmModal(overwriteQuestion(reason, p.presentation.displayName, p.skillName, 'update'), 'Sobrescribir'),
           (spec) =>
             confirmMcpModal(
-              `¿Actualizar "${p.presentation.displayName}"? Cambian los comandos de sus servidores MCP`,
+              `¿Actualizar "${p.presentation.displayName}"? Cambian sus servidores MCP`,
               'Actualizar',
               spec,
               deps.powers,

@@ -33,6 +33,14 @@ export function activationDetail(
   return lines.join('\n');
 }
 
+/** Aviso tras activar un Power con MCP. Si `.gitignore` ignora `.vscode/mcp.json`, avisa en lugar de pedir el commit. */
+export function activatedMcpMessage(displayName: string, servers: string[], mcpJsonIgnored: boolean): string {
+  const share = mcpJsonIgnored
+    ? '⚠️ .vscode/mcp.json está ignorado por git: añade `!.vscode/mcp.json` a .gitignore o tu equipo no recibirá los servidores.'
+    : 'Commitea .github y .vscode/mcp.json para compartirlo.';
+  return `SDD Studio: listo. "${displayName}" añadió ${servers.join(', ')} a .vscode/mcp.json. VS Code te pedirá confiar e iniciar el servidor. ${share}`;
+}
+
 /** Pregunta antes de sobrescribir o borrar algo editado a mano. */
 export function overwriteQuestion(reason: OverwriteReason, displayName: string, skillName: string, action: 'update' | 'mode' | 'deactivate'): string {
   const where = reason === 'MCP_EDITED' ? 'sus servidores en .vscode/mcp.json' : `.github/skills/${skillName}/`;
