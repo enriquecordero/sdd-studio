@@ -144,6 +144,57 @@ describe('PowerInstaller con MCP', () => {
     assert.strictEqual(await exists('.github/skills/cloudy'), false);
   });
 
+  it('rollback: si falla una limpieza se relanza el error original y se limpia el resto', async () => {
+    class Flaky extends PowerInstaller {
+      protected async writeLock(): Promise<void> {
+        throw new Error('boom-lock');
+      }
+      protected async writeMcpJson(...args: Parameters<PowerInstaller['writeMcpJson']>): Promise<void> {
+        if (args[1] === FOREIGN) throw new Error('boom-restore');
+        return super.writeMcpJson(...args);
+      }
+    }
+    await writeWs('.vscode/mcp.json', FOREIGN);
+    await assert.rejects(new Flaky(() => ({ access: 'all', strictPluginOnly: false })).activate(ws(), cloudy), /boom-lock/);
+    assert.strictEqual(await exists('.github/skills/cloudy'), false);
+  });
+
+  it('setMode con otra versión del catálogo: UPDATE_REQUIRED sin tocar nada', async () => {
+    await installer.activate(ws(), cloudy);
+    const files = ['.vscode/mcp.json', '.github/powers.lock.json', '.github/skills/cloudy/SKILL.md'];
+    const before = await Promise.all(files.map(readWs));
+    const bumped = (s: McpStdioServer): McpStdioServer => ({ ...s, args: ['x-mcp-server@1.1.0'] });
+    const spec = mcpSpec();
+    const v2 = mcpPower(
+      'cloudy',
+      mcpSpec({
+        servers: { 'sdd-x': bumped(spec.servers['sdd-x'] as McpStdioServer) },
+        operate: { ...spec.operate!, servers: { 'sdd-x': bumped(spec.operate!.servers['sdd-x'] as McpStdioServer) } },
+      }),
+      cloudy.files,
+      '1.1.0',
+    );
+    assert.strictEqual(await codeOf(installer.setMode(ws(), v2, 'operate', never)), 'UPDATE_REQUIRED');
+    assert.deepStrictEqual(await Promise.all(files.map(readWs)), before);
+  });
+
+  it('setMode: si falla el lock, .vscode/mcp.json vuelve a estar como antes', async () => {
+    let fail = false;
+    class Flaky extends PowerInstaller {
+      protected async writeLock(...args: Parameters<PowerInstaller['writeLock']>): Promise<void> {
+        if (fail) throw new Error('boom');
+        return super.writeLock(...args);
+      }
+    }
+    const flaky = new Flaky(() => ({ access: 'all', strictPluginOnly: false }));
+    await flaky.activate(ws(), cloudy);
+    const before = await readWs('.vscode/mcp.json');
+    fail = true;
+    await assert.rejects(flaky.setMode(ws(), cloudy, 'operate', never), /boom/);
+    assert.strictEqual(await readWs('.vscode/mcp.json'), before);
+    assert.strictEqual((await lock()).powers.cloudy.mcp.mode, 'readOnly');
+  });
+
   it('setMode: a Operar y de vuelta; el lock guarda el modo y el hash', async () => {
     await installer.activate(ws(), cloudy);
     assert.strictEqual(await installer.setMode(ws(), cloudy, 'operate', never), 'changed');

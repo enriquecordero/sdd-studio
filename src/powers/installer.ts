@@ -17,7 +17,8 @@ export type PowerErrorCode =
   | 'MCP_BLOCKED'
   | 'MCP_FILE_INVALID'
   | 'MCP_NAME_CONFLICT'
-  | 'MCP_NO_OPERATE';
+  | 'MCP_NO_OPERATE'
+  | 'UPDATE_REQUIRED';
 
 export class PowerError extends Error {
   constructor(
@@ -81,6 +82,15 @@ function stdioCommand(server: unknown): string | undefined {
   return JSON.stringify([s.command, ...(Array.isArray(s.args) ? s.args : [])]);
 }
 
+/** Ejecuta un paso de limpieza ignorando su error, para no tapar el error original. */
+async function attempt(step: () => Promise<void>): Promise<void> {
+  try {
+    await step();
+  } catch {
+    // se relanza el error original
+  }
+}
+
 export class PowerInstaller {
   constructor(private readonly readPolicy: () => McpPolicyEnv = readMcpPolicyEnv) {}
 
@@ -132,10 +142,11 @@ export class PowerInstaller {
       if (plan) await this.applyMcp(folder, plan);
       await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now, plan?.lock)));
     } catch (e) {
+      // Cada paso de limpieza por separado: si uno falla, los demás se intentan igual y se relanza el error original.
       const dir = this.skillDir(folder, power.skillName);
-      for (const rel of Object.keys(power.files)) await this.deleteIfExists(under(dir, rel));
-      await this.pruneEmptyDirs(dir);
-      if (plan) await this.restoreMcp(folder, plan.before);
+      for (const rel of Object.keys(power.files)) await attempt(() => this.deleteIfExists(under(dir, rel)));
+      await attempt(() => this.pruneEmptyDirs(dir));
+      if (plan) await attempt(() => this.restoreMcp(folder, plan.before));
       throw e;
     }
     return 'activated';
@@ -169,8 +180,14 @@ export class PowerInstaller {
     await this.writeFiles(folder, power);
     for (const rel of entry.files) if (!(rel in power.files)) await this.deleteIfExists(under(dir, rel));
     await this.pruneEmptyDirs(dir);
-    if (plan) await this.applyMcp(folder, plan);
-    await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now, plan?.lock)));
+    try {
+      if (plan) await this.applyMcp(folder, plan);
+      await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now, plan?.lock)));
+    } catch (e) {
+      // Que el lock y .vscode/mcp.json no discrepen (p. ej. lock en Solo lectura y el archivo en Operar).
+      if (plan) await attempt(() => this.restoreMcp(folder, plan.before));
+      throw e;
+    }
     return 'updated';
   }
 
@@ -187,10 +204,22 @@ export class PowerInstaller {
     if (mode === 'operate' && !power.mcp.operate) {
       throw new PowerError('MCP_NO_OPERATE', `El Power "${power.presentation.displayName}" no tiene modo Operar.`);
     }
+    // Con otra versión se escribirían definiciones (y líneas de comando) que nadie confirmó; eso lo hace update.
+    if (power.version !== entry.version) {
+      throw new PowerError(
+        'UPDATE_REQUIRED',
+        `Hay una versión nueva de "${power.presentation.displayName}". Actualízalo antes de cambiar de modo o reparar.`,
+      );
+    }
     const plan = await this.planMcp(folder, lock, power.id, { spec: power.mcp, mode }, confirmOverwrite);
     if (plan === 'cancelled') return 'cancelled';
-    await this.applyMcp(folder, plan);
-    await this.writeLock(folder, withEntry(lock, power.id, { ...entry, mcp: plan.lock }));
+    try {
+      await this.applyMcp(folder, plan);
+      await this.writeLock(folder, withEntry(lock, power.id, { ...entry, mcp: plan.lock }));
+    } catch (e) {
+      await attempt(() => this.restoreMcp(folder, plan.before));
+      throw e;
+    }
     return 'changed';
   }
 
