@@ -1,6 +1,6 @@
 ---
 name: domain-modeling
-description: Build and sharpen a project's domain model — a CONTEXT.md glossary of terms and ADRs for decisions. Use when discussing terminology, naming domain concepts, or recording an architectural decision. En español: modelo de dominio, glosario, "¿cómo llamamos a…?", "escribe un ADR", "CONTEXT.md", "registrar decisión".
+description: Build and sharpen a project's domain model — a GLOSSARY.md glossary of terms and ADRs for decisions. Use when discussing terminology, naming domain concepts, or recording an architectural decision. En español: modelo de dominio, glosario, "¿cómo llamamos a…?", "escribe un ADR", "GLOSSARY.md", "registrar decisión".
 ---
 
 # Domain Modeling

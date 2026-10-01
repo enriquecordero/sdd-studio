@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "domain-modeling",
   "version": "1.0.0",
-  "description": "Glosario del dominio (CONTEXT.md) y ADRs para que todos hablen el mismo idioma.",
+  "description": "Glosario del dominio (GLOSSARY.md) y ADRs para que todos hablen el mismo idioma.",
   "author": { "name": "Matt Pocock", "url": "https://github.com/mattpocock" },
   "license": "MIT",
   "keywords": ["ddd", "glossary", "adr"],

@@ -17,4 +17,4 @@
 
 ## Cambios de la adaptación
 - SKILL.md: la descripción del front matter se reescribe en una línea, con disparadores en español (según el brief).
-- SKILL.md, ADR-FORMAT.md y GLOSSARY-FORMAT.md: sin más cambios; el cuerpo sigue usando `GLOSSARY.md` como en el origen (la descripción, según el brief, nombra `CONTEXT.md`).
+- SKILL.md, ADR-FORMAT.md y GLOSSARY-FORMAT.md: sin más cambios; los metadatos (descripción, plugin.json, presentation.json) usan el nombre del origen, `GLOSSARY.md`, igual que el cuerpo.
