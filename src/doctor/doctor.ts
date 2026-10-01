@@ -65,9 +65,15 @@ function report(channel: vscode.OutputChannel, results: CheckResult[]): void {
   }
   const fixes = problems.flatMap((r) => (r.fix ? [r.fix] : []));
   const buttons = fixes.length > 0 ? ['Ver detalles', 'Reparar'] : ['Ver detalles'];
-  void vscode.window.showWarningMessage(`SDD Studio: ${problems.length} problema(s) de configuración.`, ...buttons).then((pick) => {
+  void vscode.window.showWarningMessage(`SDD Studio: ${problems.length} problema(s) de configuración.`, ...buttons).then(async (pick) => {
     if (pick === 'Ver detalles') channel.show();
-    if (pick === 'Reparar') for (const f of fixes) void vscode.commands.executeCommand(f.command, ...f.args);
+    if (pick !== 'Reparar') return;
+    // En secuencia: cada reparación lee y reescribe mcp.json y el lock, y en paralelo la última pisaría a las demás.
+    try {
+      for (const f of fixes) await vscode.commands.executeCommand(f.command, ...f.args);
+    } catch (e) {
+      void vscode.window.showErrorMessage(`SDD Studio: no se pudo reparar: ${e instanceof Error ? e.message : String(e)}`);
+    }
   });
 }
 
