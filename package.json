@@ -351,8 +351,10 @@
       }
     ]
   },
+  "icon": "media/icon.png",
   "scripts": {
     "build:catalog": "tsx scripts/build-catalog.ts",
+    "build:icon": "tsx scripts/build-icon.ts",
     "build:site": "npm run build:catalog && tsx scripts/build-site.ts",
     "build": "npm run build:catalog && node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
@@ -365,6 +367,7 @@
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.6.3",
     "@types/vscode": "1.138.0",

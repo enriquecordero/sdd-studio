@@ -1,3 +1,5 @@
+<p align="center"><img src="media/speccy.png" width="120" alt="Speccy, la mascota de SDD Studio"></p>
+
 # SDD Studio
 
 Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.

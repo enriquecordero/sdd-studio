@@ -82,4 +82,18 @@ describe('manifiesto', () => {
     const names = pkg.contributes.languageModelTools.map((t: { name: string }) => t.name);
     expect(names).toEqual(['sdd_writeSpecDoc', 'sdd_approvePhase', 'sdd_setTaskStatus']);
   });
+
+  it('la extensión tiene icono PNG y mascota Speccy', () => {
+    expect(pkg.icon).toBe('media/icon.png');
+    const png = readFileSync(join(root, 'media', 'icon.png'));
+    expect(png.subarray(1, 4).toString()).toBe('PNG');
+    expect(png.readUInt32BE(16)).toBe(256);
+    expect(readFileSync(join(root, 'media', 'speccy.svg'), 'utf8')).toContain('aria-label="Speccy');
+  });
+
+  it('el icono de la barra lateral es monocromo (currentColor) con forma de documento', () => {
+    const svg = readFileSync(join(root, 'media', 'sdd-studio.svg'), 'utf8');
+    expect(svg).toContain('currentColor');
+    expect(svg).not.toMatch(/#[0-9a-fA-F]{3,6}/);
+  });
 });
