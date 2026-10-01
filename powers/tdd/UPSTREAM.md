@@ -19,3 +19,4 @@
 - SKILL.md: la descripción del front matter se reescribe en una línea, con disparadores en español añadidos (según el brief).
 - SKILL.md: "call the Skill tool with "codebase-design"" → "use the `codebase-design` skill" (término de Claude Code sustituido).
 - tests.md y mocking.md: sin cambios.
+- v1.0.1: la description y la presentación describen el bucle como rojo → verde (un test a la vez); el refactor queda fuera del bucle, tal como dice el cuerpo original ("Refactoring is not part of the loop").

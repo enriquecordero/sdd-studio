@@ -2,16 +2,43 @@
   "displayName": "TDD",
   "icon": "🧪",
   "category": "testing",
-  "summary": "Rojo → verde → refactor, con tests de integración primero.",
-  "triggers": ["\"implementa…\"", "\"arregla el bug…\"", "\"con TDD\"", "\"test primero\""],
+  "summary": "Rojo → verde, un test a la vez, probando comportamiento y no implementación.",
+  "triggers": [
+    "\"implementa…\"",
+    "\"arregla el bug…\"",
+    "\"con TDD\"",
+    "\"test primero\""
+  ],
   "diagram": {
     "kind": "cycle",
     "nodes": [
-      { "label": "ROJO", "tone": "red", "edge": "código mínimo" },
-      { "label": "VERDE", "tone": "green", "edge": "limpiar" },
-      { "label": "REFACTOR", "tone": "blue", "edge": "nuevo test" }
+      {
+        "label": "UN TEST",
+        "tone": "blue",
+        "edge": "debe fallar"
+      },
+      {
+        "label": "ROJO",
+        "tone": "red",
+        "edge": "código mínimo"
+      },
+      {
+        "label": "VERDE",
+        "tone": "green",
+        "edge": "siguiente test"
+      }
     ]
   },
-  "gets": ["Cada cambio nace con su test", "Diseño guiado por el uso real", "Refactors sin miedo"],
-  "source": { "repo": "mattpocock/skills", "path": "skills/engineering/tdd", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+  "gets": [
+    "Cada cambio nace con su test",
+    "Tests que sobreviven a los refactors",
+    "El refactor, después, en code review"
+  ],
+  "source": {
+    "repo": "mattpocock/skills",
+    "path": "skills/engineering/tdd",
+    "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60",
+    "author": "Matt Pocock",
+    "license": "MIT"
+  }
 }
