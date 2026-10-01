@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { delimiter, join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { isIgnoredBy } from '../../../src/powers/mcp/gitignore';
-import { mcpPolicyState } from '../../../src/powers/mcp/policy';
+import { mcpPolicyState, strictBlocksMcp } from '../../../src/powers/mcp/policy';
 import { findOnPath } from '../../../src/powers/mcp/prereqs';
 
 describe('mcpPolicyState', () => {
@@ -18,6 +18,21 @@ describe('mcpPolicyState', () => {
   });
   it('registryOnly con access registry', () => {
     expect(mcpPolicyState({ access: 'registry', strictPluginOnly: false })).toEqual({ state: 'registryOnly', reason: 'chat.mcp.access = registry' });
+  });
+});
+
+describe('strictBlocksMcp (valor de chat.customizations.strictPluginOnlyCustomization)', () => {
+  it.each([
+    [true, true],
+    [false, false],
+    [undefined, false],
+    [[], false],
+    [['agents'], false],
+    [['mcp'], true],
+    [['agents', 'mcp'], true],
+    ['mcp', false],
+  ])('%j → %s', (value, expected) => {
+    expect(strictBlocksMcp(value)).toBe(expected);
   });
 });
 

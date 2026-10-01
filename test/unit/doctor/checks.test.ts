@@ -9,6 +9,7 @@ const healthy: DoctorEnv = {
   agentModeEnabled: true,
   extensionToolsEnabled: true,
   strictPluginOnly: false,
+  strictForMcp: false,
   mcpAccess: 'all',
   workspaceTrusted: true,
   mcpJsonIgnored: false,
@@ -37,6 +38,7 @@ describe('runChecks', () => {
       agentModeEnabled: false,
       extensionToolsEnabled: false,
       strictPluginOnly: true,
+      strictForMcp: true,
     });
     const failed = results.filter((c) => !c.ok);
     expect(failed.map((c) => c.id)).toEqual([
@@ -91,16 +93,28 @@ describe('chequeos MCP (spec §7)', () => {
   it('con Powers MCP activos y todo bien, todo ok', () => {
     expect(runChecks(withMcp).every((c) => c.ok)).toBe(true);
   });
-  it('mcp-policy: none es error y registry es warning', () => {
-    expect(find({ ...healthy, mcpAccess: 'none' }, 'mcp-policy')[0]).toMatchObject({ ok: false, severity: 'error' });
+  it('mcp-policy con Powers MCP activos: none es error y registry es warning', () => {
+    expect(find({ ...withMcp, mcpAccess: 'none' }, 'mcp-policy')[0]).toMatchObject({ ok: false, severity: 'error' });
+    expect(find({ ...withMcp, mcpAccess: 'none' }, 'mcp-policy')[0].message).toMatch(/bloqueados/);
+    expect(find({ ...withMcp, mcpAccess: 'registry' }, 'mcp-policy')[0]).toMatchObject({ ok: false, severity: 'warning' });
+    expect(find({ ...withMcp, mcpAccess: 'registry' }, 'mcp-policy')[0].message).toMatch(/registro de tu organización/);
+  });
+  it('mcp-policy sin Powers MCP activos: none y registry son info y no cuentan como problema', () => {
+    for (const mcpAccess of ['none', 'registry']) {
+      const [c] = find({ ...healthy, mcpAccess }, 'mcp-policy');
+      expect(c).toMatchObject({ ok: true, severity: 'info' });
+      expect(runChecks({ ...healthy, mcpAccess }).every((r) => r.ok)).toBe(true);
+    }
     expect(find({ ...healthy, mcpAccess: 'none' }, 'mcp-policy')[0].message).toMatch(/bloqueados/);
-    expect(find({ ...healthy, mcpAccess: 'registry' }, 'mcp-policy')[0]).toMatchObject({ ok: false, severity: 'warning' });
-    expect(find({ ...healthy, mcpAccess: 'registry' }, 'mcp-policy')[0].message).toMatch(/registro de tu organización/);
   });
   it('mcp-strict: error que nombra .vscode/mcp.json', () => {
-    const [c] = find({ ...healthy, strictPluginOnly: true }, 'mcp-strict');
+    const [c] = find({ ...healthy, strictPluginOnly: true, strictForMcp: true }, 'mcp-strict');
     expect(c).toMatchObject({ ok: false, severity: 'error' });
     expect(c.message).toMatch(/\.vscode\/mcp\.json/);
+  });
+  it('mcp-strict: una política estricta que no incluye mcp no bloquea .vscode/mcp.json', () => {
+    expect(find({ ...healthy, strictPluginOnly: true, strictForMcp: false }, 'mcp-strict')[0].ok).toBe(true);
+    expect(find({ ...healthy, strictPluginOnly: true, strictForMcp: false }, 'strict-policy')[0].ok).toBe(false);
   });
   it('mcp-github-policy: info (no cuenta como problema) con el texto de la política', () => {
     const [c] = find(withMcp, 'mcp-github-policy');

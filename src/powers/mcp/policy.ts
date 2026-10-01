@@ -12,6 +12,14 @@ export interface McpPolicyState {
   reason?: string;
 }
 
+/**
+ * ¿El valor de `chat.customizations.strictPluginOnlyCustomization` bloquea `.vscode/mcp.json`?
+ * Sí con `true` o con una lista que incluya `'mcp'`; una lista con otros tipos (p. ej. `['agents']`) no afecta a MCP.
+ */
+export function strictBlocksMcp(value: unknown): boolean {
+  return value === true || (Array.isArray(value) && value.includes('mcp'));
+}
+
 export function mcpPolicyState(env: McpPolicyEnv): McpPolicyState {
   if (env.access === 'none' || env.access === false) return { state: 'blocked', reason: 'chat.mcp.access = none' };
   if (env.strictPluginOnly) return { state: 'blocked', reason: 'política ChatStrictPluginOnlyCustomization' };

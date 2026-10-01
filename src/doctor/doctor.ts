@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { McpPolicyEnv } from '../powers/mcp/policy';
+import { McpPolicyEnv, strictBlocksMcp } from '../powers/mcp/policy';
 import type { PowersService } from '../powers/powersService';
 import { CheckResult, DoctorEnv, runChecks } from './checks';
 import { collectMcpEnv } from './mcpEnv';
@@ -8,14 +8,22 @@ import { collectMcpEnv } from './mcpEnv';
 const STRICT_SETTING = 'chat.customizations.strictPluginOnlyCustomization';
 const RAN_FOR_KEY = 'sddStudio.doctorRanFor';
 
+const strictValue = (): unknown => vscode.workspace.getConfiguration().get<unknown>(STRICT_SETTING, false);
+
+/** Política estricta activa para algún tipo de customización (aviso general de steering). */
 export function isStrictPluginOnly(): boolean {
-  const value = vscode.workspace.getConfiguration().get<unknown>(STRICT_SETTING, false);
+  const value = strictValue();
   return value === true || (Array.isArray(value) && value.length > 0);
+}
+
+/** Política estricta que afecta a `.vscode/mcp.json`: `true` o una lista que incluye `'mcp'`. */
+export function isStrictForMcp(): boolean {
+  return strictBlocksMcp(strictValue());
 }
 
 /** Lo que decide si los Powers con MCP se pueden activar (ver mcpPolicyState). */
 export function readMcpPolicyEnv(): McpPolicyEnv {
-  return { access: vscode.workspace.getConfiguration('chat').get<unknown>('mcp.access', 'all'), strictPluginOnly: isStrictPluginOnly() };
+  return { access: vscode.workspace.getConfiguration('chat').get<unknown>('mcp.access', 'all'), strictPluginOnly: isStrictForMcp() };
 }
 
 /**
@@ -45,6 +53,7 @@ async function collectEnv(context: vscode.ExtensionContext, powers: PowersServic
     agentModeEnabled: chat.get<boolean>('agent.enabled', true),
     extensionToolsEnabled: chat.get<boolean>('extensionTools.enabled', true),
     strictPluginOnly: isStrictPluginOnly(),
+    strictForMcp: isStrictForMcp(),
     mcpAccess: readMcpPolicyEnv().access,
     workspaceTrusted: vscode.workspace.isTrusted,
     ...(await collectMcpEnv(powers, vscode.workspace.workspaceFolders?.[0])),

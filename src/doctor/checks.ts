@@ -25,6 +25,8 @@ export interface DoctorEnv {
   agentModeEnabled: boolean;
   extensionToolsEnabled: boolean;
   strictPluginOnly: boolean;
+  /** La política estricta afecta a `.vscode/mcp.json` (`true` o lista que incluye `'mcp'`). */
+  strictForMcp: boolean;
   /** Valor de `chat.mcp.access`. */
   mcpAccess: unknown;
   workspaceTrusted: boolean;
@@ -63,11 +65,13 @@ export function compareVersions(a: string, b: string): number {
 
 export function mcpChecks(env: DoctorEnv): CheckResult[] {
   const policy = mcpPolicyState({ access: env.mcpAccess, strictPluginOnly: false });
+  // Sin Powers MCP activos la política no rompe nada: se informa sin contarla como problema.
+  const inUse = env.activeMcp.length > 0;
   const results: CheckResult[] = [
     {
       id: 'mcp-policy',
-      ok: policy.state === 'allowed',
-      severity: policy.state === 'blocked' ? 'error' : 'warning',
+      ok: policy.state === 'allowed' || !inUse,
+      severity: !inUse && policy.state !== 'allowed' ? 'info' : policy.state === 'blocked' ? 'error' : 'warning',
       message:
         policy.state === 'blocked'
           ? 'Los servidores MCP están desactivados (chat.mcp.access = none): los Powers con MCP quedan bloqueados.'
@@ -83,15 +87,15 @@ export function mcpChecks(env: DoctorEnv): CheckResult[] {
     },
     {
       id: 'mcp-strict',
-      ok: !env.strictPluginOnly,
+      ok: !env.strictForMcp,
       severity: 'error',
-      message: env.strictPluginOnly
+      message: env.strictForMcp
         ? 'La política ChatStrictPluginOnlyCustomization bloquea .vscode/mcp.json: los Powers con MCP no se pueden activar.'
         : 'La política estricta no bloquea .vscode/mcp.json',
-      action: env.strictPluginOnly ? 'Pide a TI permitir customizaciones de workspace para usar Powers con MCP.' : undefined,
+      action: env.strictForMcp ? 'Pide a TI permitir customizaciones de workspace para usar Powers con MCP.' : undefined,
     },
   ];
-  if (env.activeMcp.length === 0) return results;
+  if (!inUse) return results;
 
   results.push({
     id: 'mcp-github-policy',
