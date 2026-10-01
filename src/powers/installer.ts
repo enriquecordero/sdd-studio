@@ -82,6 +82,19 @@ function stdioCommand(server: unknown): string | undefined {
   return JSON.stringify([s.command, ...(Array.isArray(s.args) ? s.args : [])]);
 }
 
+/**
+ * Ejecuta una edición de `.vscode/mcp.json` y convierte un McpJsonError (archivo válido pero que no sabemos
+ * editar sin riesgo) en MCP_FILE_INVALID con el archivo a abrir. Cualquier otro error pasa tal cual.
+ */
+export function mcpEditOrFileInvalid<T>(editFn: () => T, fileUri: vscode.Uri): T {
+  try {
+    return editFn();
+  } catch (e) {
+    if (!(e instanceof McpJsonError)) throw e;
+    throw new PowerError('MCP_FILE_INVALID', `SDD Studio no pudo editar .vscode/mcp.json de forma segura (${e.message}). Edítalo a mano y reintenta.`, fileUri);
+  }
+}
+
 /** Ejecuta un paso de limpieza ignorando su error, para no tapar el error original. */
 async function attempt(step: () => Promise<void>): Promise<void> {
   try {
@@ -281,8 +294,10 @@ export class PowerInstaller {
     const targetInputs = target?.spec.inputs.map((i) => i.id) ?? [];
     const keep = inputsInUse(lock, id);
     const dropInputs = (current?.inputs ?? []).filter((i) => !targetInputs.includes(i) && !keep.has(i));
-    let after = removeEntries(before, currentNames.filter((n) => !(n in targetServers)), dropInputs);
-    if (target) after = addEntries(after, targetServers, target.spec.inputs);
+    const after = mcpEditOrFileInvalid(() => {
+      const removed = removeEntries(before, currentNames.filter((n) => !(n in targetServers)), dropInputs);
+      return target ? addEntries(removed, targetServers, target.spec.inputs) : removed;
+    }, this.mcpUri(folder));
     const commandChanged = Object.entries(targetServers).some(
       ([n, s]) =>
         s.type === 'stdio' &&
@@ -290,7 +305,7 @@ export class PowerInstaller {
         (!(n in present) || stdioCommand(present[n]) !== stdioCommand(s)),
     );
     const createdFile = current?.createdFile ?? (before === undefined || mcpFileCreatedByUs(lock, id));
-    const deleteFile = !target && createdFile && isEmptyMcpFile(after);
+    const deleteFile = !target && createdFile && mcpEditOrFileInvalid(() => isEmptyMcpFile(after), this.mcpUri(folder));
     return {
       before,
       after: deleteFile ? undefined : after,

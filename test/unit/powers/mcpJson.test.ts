@@ -135,6 +135,59 @@ describe('mcpJson', () => {
         expect(parse(out)).toEqual({ servers: {} });
       }
     });
+
+    it('(h) un comentario entre el valor del nuestro y su coma: salida válida y el resto intacto', () => {
+      const out = remove(`{ "servers": { ${ours} /* x */, ${mine} } }`);
+      expect(out).toBe(`{ "servers": {  /* x */ ${mine} } }`);
+      expect(parse(out)).toEqual({ servers: { mine: { type: 'stdio', command: 'my-server' } } });
+      const lines = remove(`{\n  "servers": {\n    ${ours} /* x */,\n    ${mine}\n  }\n}\n`);
+      expect(lines).toBe(`{\n  "servers": {\n    /* x */\n    ${mine}\n  }\n}\n`);
+      expect(isEmptyMcpFile(lines)).toBe(false);
+    });
+
+    it('(i) un comentario de línea entre el valor del nuestro y su coma', () => {
+      const out = remove(`{\n  "servers": {\n    ${ours} // x\n    ,${mine}\n  }\n}\n`);
+      expect(out).toBe(`{\n  "servers": {\n    // x\n    ${mine}\n  }\n}\n`);
+      expect(parse(out).servers).toEqual({ mine: { type: 'stdio', command: 'my-server' } });
+    });
+  });
+
+  describe('insertar en un contenedor vacío', () => {
+    const server = aws['sdd-aws'];
+    const block = (indent: string) =>
+      JSON.stringify({ 'sdd-aws': server }, null, 2)
+        .slice(2, -2)
+        .split('\n')
+        .map((l) => indent + l.slice(2))
+        .join('\n');
+
+    it('"servers": {} recibe la entrada en sus propias líneas, bien sangrada', () => {
+      const out = addEntries('{\n  // mío\n  "servers": {}\n}\n', aws, []);
+      expect(out).toBe(`{\n  // mío\n  "servers": {\n${block('    ')}\n  }\n}\n`);
+    });
+
+    it('"servers": {\\n  } también', () => {
+      const out = addEntries('{\n  // mío\n  "servers": {\n  }\n}\n', aws, []);
+      expect(out).toBe(`{\n  // mío\n  "servers": {\n${block('    ')}\n  }\n}\n`);
+    });
+
+    it('"inputs": [] recibe el input en sus propias líneas', () => {
+      const out = addEntries('{\n  "servers": { "mine": { "type": "stdio", "command": "x" } },\n  "inputs": []\n}\n', {}, [region]);
+      const input = JSON.stringify([region], null, 2).split('\n').map((l, i) => (i === 0 ? l : `  ${l}`)).join('\n');
+      expect(out).toBe(`{\n  "servers": { "mine": { "type": "stdio", "command": "x" } },\n  "inputs": ${input}\n}\n`);
+    });
+
+    it('un contenedor vacío con un comentario dentro no se reformatea', () => {
+      const out = addEntries('{\n  "servers": { /* nada */ }\n}\n', aws, []);
+      expect(out).toContain('/* nada */');
+      expect(parse(out).servers).toEqual(aws);
+    });
+
+    it('activar → desactivar → activar en un archivo creado por nosotros da el mismo texto', () => {
+      const first = addEntries(undefined, { ...aws, ...c7 }, [region]);
+      const removed = removeEntries(first, ['sdd-aws', 'sdd-context7'], ['sdd_aws_region']);
+      expect(addEntries(removed, { ...aws, ...c7 }, [region])).toBe(first);
+    });
   });
 
   it('readEntries devuelve solo las presentes', () => {

@@ -1,5 +1,17 @@
 import { createHash } from 'crypto';
-import { applyEdits, format, FormattingOptions, modify, Node, parse, ParseError, parseTree, printParseErrorCode } from 'jsonc-parser';
+import {
+  applyEdits,
+  createScanner,
+  format,
+  FormattingOptions,
+  modify,
+  Node,
+  parse,
+  ParseError,
+  parseTree,
+  printParseErrorCode,
+  SyntaxKind,
+} from 'jsonc-parser';
 import { canonicalJson } from '../hash';
 import { McpInput, McpServer } from './spec';
 
@@ -34,20 +46,6 @@ function load(text: string | undefined): McpFile {
 
 const hasKey = (text: string, key: string): boolean => key in (parse(text) as Record<string, unknown>);
 
-/**
- * Aplica un cambio sin tocar un solo byte fuera del nodo afectado: `modify` sin formato y,
- * si se inserta o reemplaza un valor, se formatea solo el rango insertado.
- */
-function edit(text: string, path: (string | number)[], value: unknown): string {
-  const edits = modify(text, path, value, {});
-  if (edits.length === 0) return text;
-  const changed = applyEdits(text, edits);
-  if (value === undefined) return changed;
-  const first = edits[0];
-  const content = edits.reduce((n, e) => n + e.content.length, 0);
-  return applyEdits(changed, format(changed, { offset: first.offset, length: content }, FORMAT));
-}
-
 /** Nodo en `path` (claves de objeto o índices de lista), o undefined. */
 function findNode(root: Node | undefined, path: (string | number)[]): Node | undefined {
   let node = root;
@@ -57,10 +55,51 @@ function findNode(root: Node | undefined, path: (string | number)[]): Node | und
   return node;
 }
 
+/** `{}` o `[]` sin hijos y sin nada más que espacios dentro (sin comentarios ajenos que reformatear). */
+const isBlankContainer = (text: string, node: Node | undefined): boolean =>
+  node !== undefined && (node.type === 'object' || node.type === 'array') && /^[{[]\s*[}\]]$/.test(text.slice(node.offset, node.offset + node.length));
+
+/**
+ * Aplica un cambio sin tocar un solo byte fuera del nodo afectado: `modify` sin formato y,
+ * si se inserta o reemplaza un valor, se formatea solo el rango insertado. Si el contenedor
+ * estaba vacío (`{}`, `{\n  }`, `[]`), se formatea el contenedor entero para que la entrada
+ * quede en sus propias líneas en lugar de pegada a la llave.
+ */
+function edit(text: string, path: (string | number)[], value: unknown): string {
+  const parentPath = path.slice(0, -1);
+  const wasBlank = value !== undefined && isBlankContainer(text, findNode(parseTree(text), parentPath));
+  const edits = modify(text, path, value, {});
+  if (edits.length === 0) return text;
+  const changed = applyEdits(text, edits);
+  if (value === undefined) return changed;
+  const parent = wasBlank ? findNode(parseTree(changed), parentPath) : undefined;
+  const range = parent
+    ? { offset: parent.offset, length: parent.length }
+    : { offset: edits[0].offset, length: edits.reduce((n, e) => n + e.content.length, 0) };
+  return applyEdits(changed, format(changed, range, FORMAT));
+}
+
+/** Offset de la coma que sigue a `from` saltando espacios y comentarios, y si hubo comentarios por medio; o undefined. */
+function commaAfter(text: string, from: number): { at: number; comments: boolean } | undefined {
+  const scanner = createScanner(text, false);
+  scanner.setPosition(from);
+  let comments = false;
+  for (;;) {
+    const token = scanner.scan();
+    if (token === SyntaxKind.Trivia || token === SyntaxKind.LineBreakTrivia) continue;
+    if (token === SyntaxKind.LineCommentTrivia || token === SyntaxKind.BlockCommentTrivia) {
+      comments = true;
+      continue;
+    }
+    return token === SyntaxKind.CommaToken ? { at: scanner.getTokenOffset(), comments } : undefined;
+  }
+}
+
 /**
  * Borra el hijo `index` del objeto o lista en `path` sin tocar ningún otro byte ni comentario ajeno:
  * 1. con hermano anterior unido solo por su coma, se borra esa coma y el nodo (deshace exactamente una inserción);
- * 2. si no, se borra el nodo con su línea (y su coma, si la tiene), dejando intactos los comentarios vecinos.
+ * 2. si no, se borra el nodo con su línea (y su coma, si la tiene), dejando intactos los comentarios vecinos;
+ *    si entre el valor y su coma hay comentarios, se borran el nodo y la coma y los comentarios se quedan.
  * No usa `modify`: al borrar se come comas y comentarios de los hermanos.
  */
 function removeChild(text: string, path: (string | number)[], index: number): string {
@@ -74,10 +113,14 @@ function removeChild(text: string, path: (string | number)[], index: number): st
     const comma = /^\s*,\s*$/.test(gap) ? gap.indexOf(',') : -1;
     if (comma >= 0) return text.slice(0, prev.offset + prev.length + comma) + text.slice(end);
   }
-  const after = /^\s*,/.exec(text.slice(end));
-  const to = after ? end + after[0].length : end;
+  const comma = commaAfter(text, end);
   const lineStart = text.lastIndexOf('\n', node.offset - 1) + 1;
   const alone = /^[ \t]*$/.test(text.slice(lineStart, node.offset));
+  if (comma?.comments) {
+    const between = text.slice(end, comma.at);
+    return text.slice(0, node.offset) + (alone ? between.replace(/^[ \t]+/, '') : between) + text.slice(comma.at + 1);
+  }
+  const to = comma ? comma.at + 1 : end;
   const rest = /^[ \t]*\r?\n/.exec(text.slice(to));
   if (alone && rest) return text.slice(0, lineStart) + text.slice(to + rest[0].length);
   return text.slice(0, alone ? lineStart : node.offset) + text.slice(to);

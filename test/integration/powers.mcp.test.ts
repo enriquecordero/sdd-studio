@@ -1,7 +1,8 @@
 import * as assert from 'assert';
+import { parse, ParseError } from 'jsonc-parser';
 import * as vscode from 'vscode';
-import { entryHash } from '../../src/powers/mcp/mcpJson';
-import { PowerInstaller } from '../../src/powers/installer';
+import { entryHash, McpJsonError } from '../../src/powers/mcp/mcpJson';
+import { mcpEditOrFileInvalid, PowerInstaller } from '../../src/powers/installer';
 import type { McpStdioServer } from '../../src/powers/mcp/spec';
 import { mcpPower, mcpSpec, power } from '../support/powerFixtures';
 import { readWs, restoreFixture, ws, wsUri, writeWs } from './helpers';
@@ -24,10 +25,12 @@ async function codeOf(p: Promise<unknown>): Promise<string | undefined> {
   }
 }
 
-/** Quita comentarios // de línea y comas finales para poder usar JSON.parse en los asserts. */
+/** Lee .vscode/mcp.json como JSONC (comentarios y comas finales) para los asserts. */
 async function mcpJson(): Promise<{ servers: Record<string, unknown>; inputs?: { id: string }[] }> {
-  const text = await readWs('.vscode/mcp.json');
-  return JSON.parse(text.replace(/\/\/.*$/gm, '').replace(/,(\s*[}\]])/g, '$1'));
+  const errors: ParseError[] = [];
+  const value = parse(await readWs('.vscode/mcp.json'), errors, { allowTrailingComma: true });
+  assert.deepStrictEqual(errors, []);
+  return value;
 }
 
 const lock = async () => JSON.parse(await readWs('.github/powers.lock.json'));
@@ -263,6 +266,33 @@ describe('PowerInstaller con MCP', () => {
     assert.deepStrictEqual(after, before);
     assert.strictEqual(await installer.update(ws(), v2, never, new Date(), yes), 'updated');
     assert.deepStrictEqual((await mcpJson()).servers['sdd-x'], v2spec.servers['sdd-x']);
+  });
+
+  it('desactivar con un comentario entre nuestra entrada y su coma deja un archivo válido con lo ajeno', async () => {
+    await installer.activate(ws(), cloudy);
+    const entry = JSON.stringify(cloudy.mcp!.servers['sdd-x']);
+    const inputs = JSON.stringify(cloudy.mcp!.inputs);
+    await writeWs('.vscode/mcp.json', `{ "servers": { "sdd-x": ${entry} /* x */, "mine": { "type": "stdio", "command": "my-server" } }, "inputs": ${inputs} }`);
+    assert.strictEqual(await installer.deactivate(ws(), 'cloudy', never), 'deactivated');
+    assert.deepStrictEqual((await mcpJson()).servers, { mine: { type: 'stdio', command: 'my-server' } });
+    assert.match(await readWs('.vscode/mcp.json'), /\/\* x \*\//);
+  });
+
+  it('mcpEditOrFileInvalid convierte McpJsonError en MCP_FILE_INVALID con el archivo y deja pasar el resto', () => {
+    const uri = wsUri('.vscode/mcp.json');
+    let err: { code?: string; message?: string; fileUri?: vscode.Uri } = {};
+    try {
+      mcpEditOrFileInvalid(() => {
+        throw new McpJsonError('detalle');
+      }, uri);
+    } catch (e) {
+      err = e as typeof err;
+    }
+    assert.strictEqual(err.code, 'MCP_FILE_INVALID');
+    assert.strictEqual(err.message, 'SDD Studio no pudo editar .vscode/mcp.json de forma segura (detalle). Edítalo a mano y reintenta.');
+    assert.strictEqual(err.fileUri?.path, uri.path);
+    assert.throws(() => mcpEditOrFileInvalid(() => { throw new Error('otro'); }, uri), /otro/);
+    assert.strictEqual(mcpEditOrFileInvalid(() => 'ok', uri), 'ok');
   });
 
   it('update con la misma línea de comando no pide confirmar el MCP', async () => {
