@@ -27,7 +27,7 @@ describe('httpFetcher', () => {
     const url = await listen(() => undefined);
     await expect(httpFetcher(url, 200)).rejects.toThrow(/tiempo agotado/);
   });
-  it('la URL oficial es la de GitHub Pages', () => {
-    expect(CATALOG_URL).toBe('https://enriquecordero.github.io/sdd-studio/powers/catalog.json');
+  it('la URL oficial es el catálogo v2 de GitHub Pages', () => {
+    expect(CATALOG_URL).toBe('https://enriquecordero.github.io/sdd-studio/powers/catalog-v2.json');
   });
 });

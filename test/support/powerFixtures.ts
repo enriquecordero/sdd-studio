@@ -1,4 +1,4 @@
-import { powerHash } from '../../src/powers/hash';
+import { catalogPowerHash, powerHash } from '../../src/powers/hash';
 import type { McpSpec } from '../../src/powers/mcp/spec';
 import { Catalog, CatalogPower, Presentation } from '../../src/powers/types';
 
@@ -24,8 +24,18 @@ export function power(
   return { id, version, presentation: presentation({ displayName: id }), skillName: id, files, sha256: powerHash(files) };
 }
 
-export function catalog(powers: CatalogPower[], generatedAt = '2026-10-01T00:00:00.000Z'): Catalog {
-  return { schemaVersion: 1, generatedAt, powers };
+export function catalog(powers: CatalogPower[], generatedAt = '2026-10-01T00:00:00.000Z', schemaVersion: 1 | 2 = 2): Catalog {
+  return { schemaVersion, generatedAt, powers };
+}
+
+/** Power con MCP: hash del catálogo calculado sobre los archivos y el spec. */
+export function mcpPower(
+  id = 'cloudy',
+  spec: McpSpec = mcpSpec(),
+  files: Record<string, string> = { 'SKILL.md': `---\nname: ${id}\ndescription: Test skill\n---\nUse ${Object.keys(spec.servers).join(', ')}.\n` },
+  version = '1.0.0',
+): CatalogPower {
+  return { ...power(id, files, version), mcp: spec, sha256: catalogPowerHash(files, spec) };
 }
 
 /** McpSpec válido de tipo "cloud": un servidor stdio con dos inputs y modo Operar. */

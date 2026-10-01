@@ -24,3 +24,11 @@ export function canonicalJson(value: unknown): string {
   }
   return JSON.stringify(value);
 }
+
+/** Clave con la que `mcp.vscode.json` entra en el hash del catálogo. No es un archivo del skill. */
+export const MCP_HASH_KEY = 'mcp.vscode.json';
+
+/** Hash del catálogo: los archivos del skill y, si hay MCP, `mcp.vscode.json` en forma canónica. */
+export function catalogPowerHash(files: Record<string, string>, mcp?: unknown): string {
+  return powerHash(mcp === undefined ? files : { ...files, [MCP_HASH_KEY]: canonicalJson(mcp) });
+}

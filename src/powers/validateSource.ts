@@ -1,5 +1,6 @@
 import { frontMatterFields } from '../specs/frontMatter';
 import { isSafeRelativePath, isSemver, isValidId, validatePresentation } from './catalog';
+import { validateMcpSpec } from './mcp/spec';
 
 export interface PowerSourceInput {
   dirName: string;
@@ -9,6 +10,8 @@ export interface PowerSourceInput {
   skillFiles: Record<string, string>;
   hasLicense: boolean;
   hasUpstream: boolean;
+  /** Texto de `mcp.vscode.json`, si existe. */
+  mcpText?: string;
 }
 
 export const FORBIDDEN_TERMS: ReadonlyArray<{ pattern: RegExp; label: string }> = [
@@ -63,6 +66,24 @@ export function validatePowerSource(input: PowerSourceInput): string[] {
     if (!isSafeRelativePath(path)) errors.push(`${d}: ruta no permitida "${path}".`);
     for (const { pattern, label } of FORBIDDEN_TERMS) {
       if (pattern.test(content)) errors.push(`${d}: término prohibido "${label}" en skills/${d}/${path}.`);
+    }
+  }
+  if (input.mcpText !== undefined) {
+    let mcp: unknown;
+    try {
+      mcp = JSON.parse(input.mcpText);
+    } catch {
+      errors.push(`${d}: mcp.vscode.json no es JSON válido.`);
+    }
+    if (mcp !== undefined) {
+      const mcpErrors = validateMcpSpec(mcp, `${d}/mcp.vscode.json`);
+      errors.push(...mcpErrors);
+      const servers = (mcp as { servers?: unknown }).servers;
+      if (mcpErrors.length === 0 && skill !== undefined && typeof servers === 'object' && servers !== null) {
+        for (const name of Object.keys(servers)) {
+          if (!skill.includes(name)) errors.push(`${d}: SKILL.md debe nombrar el servidor "${name}".`);
+        }
+      }
     }
   }
   if (!input.hasLicense) errors.push(`${d}: falta LICENSE.`);

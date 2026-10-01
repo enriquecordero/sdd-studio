@@ -1,6 +1,6 @@
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { validateCatalog } from '../src/powers/catalog';
+import { catalogV1, validateCatalog } from '../src/powers/catalog';
 import { renderPoster } from '../src/powers/render/card';
 import { escapeHtml as e } from '../src/powers/render/escape';
 import { FILTER_SCRIPT, renderFilters, renderGrid, renderTeaserChips } from '../src/powers/render/gallery';
@@ -68,7 +68,8 @@ export function buildSite(opts: { siteDir: string; outDir: string; catalog: Cata
   for (const p of catalog.powers) {
     writeFileSync(join(dir, `${p.id}.html`), page(`${p.presentation.displayName} — Powers de SDD Studio`, renderPoster(p, { actions: false }) + howTo(p)));
   }
-  writeFileSync(join(dir, 'catalog.json'), `${JSON.stringify(catalog)}\n`);
+  writeFileSync(join(dir, 'catalog-v2.json'), `${JSON.stringify(catalog)}\n`);
+  writeFileSync(join(dir, 'catalog.json'), `${JSON.stringify(catalogV1(catalog))}\n`);
 }
 
 function main(): void {

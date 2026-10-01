@@ -1,6 +1,6 @@
 export type CatalogFetcher = (url: string, timeoutMs: number) => Promise<string>;
 
-export const CATALOG_URL = 'https://enriquecordero.github.io/sdd-studio/powers/catalog.json';
+export const CATALOG_URL = 'https://enriquecordero.github.io/sdd-studio/powers/catalog-v2.json';
 export const FETCH_TIMEOUT_MS = 10_000;
 
 export const httpFetcher: CatalogFetcher = async (url, timeoutMs) => {

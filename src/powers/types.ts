@@ -75,8 +75,11 @@ export interface CatalogPower {
   mcp?: McpSpec;
 }
 
+/** 1: sin MCP (v0.3–v0.4). 2: admite Powers con `mcp` (v0.5+). */
+export type CatalogSchemaVersion = 1 | 2;
+
 export interface Catalog {
-  schemaVersion: 1;
+  schemaVersion: CatalogSchemaVersion;
   generatedAt: string;
   powers: CatalogPower[];
 }

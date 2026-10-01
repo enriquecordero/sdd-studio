@@ -1,4 +1,5 @@
-import { powerHash } from './hash';
+import { catalogPowerHash, MCP_HASH_KEY } from './hash';
+import { validateMcpSpec } from './mcp/spec';
 import { CATEGORIES, Catalog, MAX_EDGE, MAX_ITEM, MAX_LABEL, NODE_LIMITS, TONES } from './types';
 
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };
@@ -96,7 +97,7 @@ export function validatePresentation(p: unknown, where: string): string[] {
   return errors;
 }
 
-function validatePower(p: unknown, index: number): string[] {
+function validatePower(p: unknown, index: number, schemaVersion: unknown): string[] {
   const where = `powers[${index}]`;
   if (!isObj(p)) return [`${where}: debe ser un objeto.`];
   const name = isValidId(p.id) ? p.id : where;
@@ -104,17 +105,24 @@ function validatePower(p: unknown, index: number): string[] {
   if (!isValidId(p.id)) errors.push(`${where}: "id" inválido.`);
   if (!isSemver(p.version)) errors.push(`${name}: "version" debe ser semver (1.2.3).`);
   if (!isValidId(p.skillName)) errors.push(`${name}: "skillName" inválido.`);
+  let mcpOk = true;
+  if (p.mcp !== undefined) {
+    if (schemaVersion !== 2) errors.push(`${name}: un Power con "mcp" necesita un catálogo con schemaVersion 2.`);
+    const mcpErrors = validateMcpSpec(p.mcp, name);
+    errors.push(...mcpErrors);
+    mcpOk = mcpErrors.length === 0;
+  }
   if (!isObj(p.files) || !('SKILL.md' in p.files)) {
     errors.push(`${name}: "files" debe incluir SKILL.md.`);
   } else {
     const fileErrors: string[] = [];
     for (const [path, content] of Object.entries(p.files)) {
-      if (!isSafeRelativePath(path)) fileErrors.push(`${name}: ruta de archivo no permitida "${path}".`);
+      if (!isSafeRelativePath(path) || path === MCP_HASH_KEY) fileErrors.push(`${name}: ruta de archivo no permitida "${path}".`);
       if (typeof content !== 'string') fileErrors.push(`${name}: el contenido de "${path}" debe ser texto.`);
     }
     errors.push(...fileErrors);
     if (typeof p.sha256 !== 'string' || !SHA_RE.test(p.sha256)) errors.push(`${name}: "sha256" inválido.`);
-    else if (fileErrors.length === 0 && powerHash(p.files as Record<string, string>) !== p.sha256) {
+    else if (fileErrors.length === 0 && mcpOk && catalogPowerHash(p.files as Record<string, string>, p.mcp) !== p.sha256) {
       errors.push(`${name}: el hash no coincide con los archivos.`);
     }
   }
@@ -125,15 +133,18 @@ function validatePower(p: unknown, index: number): string[] {
 export function validateCatalog(json: unknown): ValidationResult<Catalog> {
   if (!isObj(json)) return { ok: false, errors: ['El catálogo debe ser un objeto.'] };
   const errors: string[] = [];
-  if (json.schemaVersion !== 1) errors.push('"schemaVersion" debe ser 1.');
+  if (json.schemaVersion !== 1 && json.schemaVersion !== 2) errors.push('"schemaVersion" debe ser 1 o 2.');
   if (typeof json.generatedAt !== 'string' || Number.isNaN(Date.parse(json.generatedAt))) errors.push('"generatedAt" debe ser una fecha ISO.');
   if (!Array.isArray(json.powers)) {
     errors.push('"powers" debe ser una lista.');
   } else {
-    json.powers.forEach((p, i) => errors.push(...validatePower(p, i)));
+    json.powers.forEach((p, i) => errors.push(...validatePower(p, i, json.schemaVersion)));
     const ids = json.powers.map((p) => (isObj(p) ? p.id : undefined));
     const dup = ids.find((id, i) => id !== undefined && ids.indexOf(id) !== i);
     if (dup !== undefined) errors.push(`Id duplicado: ${String(dup)}.`);
+    const servers = json.powers.flatMap((p) => (isObj(p) && isObj(p.mcp) && isObj(p.mcp.servers) ? Object.keys(p.mcp.servers) : []));
+    const dupServer = servers.find((s, i) => servers.indexOf(s) !== i);
+    if (dupServer !== undefined) errors.push(`Servidor MCP duplicado entre Powers: ${dupServer}.`);
   }
   return errors.length > 0 ? { ok: false, errors } : { ok: true, value: json as unknown as Catalog };
 }
@@ -141,5 +152,11 @@ export function validateCatalog(json: unknown): ValidationResult<Catalog> {
 export function newestCatalog(current: Catalog | undefined, candidate: Catalog | undefined): Catalog | undefined {
   if (!current) return candidate;
   if (!candidate) return current;
+  if (candidate.schemaVersion !== current.schemaVersion) return candidate.schemaVersion > current.schemaVersion ? candidate : current;
   return Date.parse(candidate.generatedAt) > Date.parse(current.generatedAt) ? candidate : current;
+}
+
+/** Catálogo v1 para v0.4.0 y anteriores: solo los Powers sin MCP. */
+export function catalogV1(catalog: Catalog): Catalog {
+  return { schemaVersion: 1, generatedAt: catalog.generatedAt, powers: catalog.powers.filter((p) => p.mcp === undefined) };
 }

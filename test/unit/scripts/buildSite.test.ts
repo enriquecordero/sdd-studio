@@ -4,7 +4,7 @@ import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { buildSite, TEASER_MARKER } from '../../../scripts/build-site';
 import { validateCatalog } from '../../../src/powers/catalog';
-import { catalog, power } from '../../support/powerFixtures';
+import { catalog, mcpPower, power } from '../../support/powerFixtures';
 
 describe('buildSite', () => {
   it('genera landing con teaser, /powers con tarjetas, detalle y catálogo', () => {
@@ -33,5 +33,18 @@ describe('buildSite', () => {
 
     expect(validateCatalog(JSON.parse(readFileSync(join(outDir, 'powers', 'catalog.json'), 'utf8'))).ok).toBe(true);
     expect(existsSync(join(outDir, 'speccy.svg'))).toBe(true);
+  });
+  it('publica catalog-v2.json con todos y catalog.json (v1) sin los Powers MCP', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'site-'));
+    const outDir = join(tmp, '_site');
+    buildSite({ siteDir: join(tmp, 'no-site'), outDir, catalog: catalog([power('alpha'), mcpPower('cloudy')]) });
+    const v2 = JSON.parse(readFileSync(join(outDir, 'powers', 'catalog-v2.json'), 'utf8'));
+    const v1 = JSON.parse(readFileSync(join(outDir, 'powers', 'catalog.json'), 'utf8'));
+    expect(v2.schemaVersion).toBe(2);
+    expect(v2.powers.map((p: { id: string }) => p.id)).toEqual(['alpha', 'cloudy']);
+    expect(v1.schemaVersion).toBe(1);
+    expect(v1.powers.map((p: { id: string }) => p.id)).toEqual(['alpha']);
+    expect(validateCatalog(v1).ok).toBe(true);
+    expect(validateCatalog(v2).ok).toBe(true);
   });
 });
