@@ -5,12 +5,12 @@ import { frontMatterFields } from '../../src/specs/frontMatter';
 
 const root = join(__dirname, '../..');
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-const AGENTS = ['sdd-requirements', 'sdd-design', 'sdd-tasks', 'sdd-implement', 'sdd-steering'];
+const AGENTS = ['sdd-spec', 'sdd-requirements', 'sdd-design', 'sdd-tasks', 'sdd-implement', 'sdd-steering'];
 
 describe('manifiesto', () => {
-  it('registra los 5 agentes y sus archivos existen con name correcto', () => {
+  it('registra los 6 agentes y sus archivos existen con name correcto', () => {
     const paths: string[] = pkg.contributes.chatAgents.map((a: { path: string }) => a.path);
-    expect(paths).toHaveLength(5);
+    expect(paths).toHaveLength(6);
     for (const name of AGENTS) {
       const file = join(root, 'agents', `${name}.agent.md`);
       expect(paths).toContain(`./agents/${name}.agent.md`);
@@ -34,12 +34,27 @@ describe('manifiesto', () => {
     }
   });
 
-  it('registra los 4 prompt files y existen', () => {
+  it('registra los 5 prompt files y existen', () => {
     const paths: string[] = pkg.contributes.chatPromptFiles.map((p: { path: string }) => p.path);
     expect(paths.sort()).toEqual(
-      ['spec-bugfix', 'spec-new', 'spec-run', 'spec-steering'].map((n) => `./prompts/${n}.prompt.md`),
+      ['spec-bugfix', 'spec-new', 'spec-quick', 'spec-run', 'spec-steering'].map((n) => `./prompts/${n}.prompt.md`),
     );
     paths.forEach((p) => expect(existsSync(join(root, p))).toBe(true));
+  });
+
+  it('sdd-spec pregunta con tarjetas y delega en subagentes de fase', () => {
+    const fields = frontMatterFields(readFileSync(join(root, 'agents', 'sdd-spec.agent.md'), 'utf8'));
+    const tools = fields.get('tools')!;
+    expect(tools).toContain("'vscode/askQuestions'");
+    expect(tools).toContain("'agent/runSubagent'");
+    expect(tools).not.toMatch(/'edit'/);
+    expect(fields.get('agents')).toBe("['sdd-requirements', 'sdd-design', 'sdd-tasks']");
+  });
+
+  it('los prompts de creación abren sdd-spec', () => {
+    for (const name of ['spec-new', 'spec-bugfix', 'spec-quick']) {
+      expect(frontMatterFields(readFileSync(join(root, 'prompts', `${name}.prompt.md`), 'utf8')).get('agent')).toBe('sdd-spec');
+    }
   });
 
   it('cada herramienta registrada en código está declarada en el manifiesto', () => {

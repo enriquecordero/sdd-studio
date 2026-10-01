@@ -4,7 +4,8 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 
 - [ ] El Diagnóstico dice "todo listo" (o solo avisos esperados).
 - [ ] La primera activación pregunta una vez por el tema; "Activar" aplica SDD Studio Dark.
-- [ ] Nuevo spec (feature) → se abre Copilot con `sdd-requirements` y el prompt.
+- [ ] Nuevo spec → se abre Copilot con `sdd-spec` y la caja vacía; al escribir la idea aparece la tarjeta Funcionalidad / Bug / Quick Spec.
+- [ ] Quick Spec → corren los subagentes requisitos → diseño → tareas y `tasks.md` queda aprobado con "▶ Ejecutar tarea".
 - [ ] `sdd-requirements` escribe `specs/<spec>/requirements.md` con front matter `status: draft`, criterios EARS numerados y sin tocar otros archivos.
 - [ ] Botón "✓ Aprobar requisitos → Diseño": requirements queda `approved`, `sdd-design` escribe `design.md` con todas las secciones.
 - [ ] Aprobar diseño → `sdd-tasks` escribe `tasks.md` con `_Requisitos: …_` en cada hoja.

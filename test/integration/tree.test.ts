@@ -5,9 +5,9 @@ import type { AgentName } from '../../src/copilot/prompts';
 import { getApi, readWs, restoreFixture } from './helpers';
 
 class FakeBridge implements CopilotBridge {
-  calls: { agent: AgentName; prompt: string }[] = [];
-  async openAgent(agent: AgentName, prompt: string): Promise<void> {
-    this.calls.push({ agent, prompt });
+  calls: { agent: AgentName; prompt: string; partial?: boolean }[] = [];
+  async openAgent(agent: AgentName, prompt: string, options?: { partial?: boolean }): Promise<void> {
+    this.calls.push({ agent, prompt, partial: options?.partial });
   }
 }
 
@@ -88,22 +88,20 @@ describe('Panel Specs y comandos de spec', () => {
     assert.strictEqual(fake.calls[0].agent, 'sdd-design');
   });
 
-  it('newSpec con argumentos abre sdd-requirements con el prompt', async () => {
+  it('newSpec sin argumentos abre sdd-spec con la caja de chat vacía (sin formularios)', async () => {
     const api = await getApi();
     const fake = new FakeBridge();
     api.setCopilotBridge(fake);
-    await vscode.commands.executeCommand('sddStudio.newSpec', { type: 'feature', name: 'Exportación PDF', description: 'Exportar a PDF' });
-    assert.strictEqual(fake.calls.length, 1);
-    assert.strictEqual(fake.calls[0].agent, 'sdd-requirements');
-    assert.match(fake.calls[0].prompt, /Crea el spec "exportacion-pdf" \(feature\)/);
+    await vscode.commands.executeCommand('sddStudio.newSpec');
+    assert.deepStrictEqual(fake.calls, [{ agent: 'sdd-spec', prompt: '', partial: true }]);
   });
 
-  it('newSpec rechaza un nombre que ya existe', async () => {
+  it('newSpec con una descripción la envía a sdd-spec', async () => {
     const api = await getApi();
     const fake = new FakeBridge();
     api.setCopilotBridge(fake);
-    await vscode.commands.executeCommand('sddStudio.newSpec', { type: 'feature', name: 'export-csv', description: 'x' });
-    assert.strictEqual(fake.calls.length, 0);
+    await vscode.commands.executeCommand('sddStudio.newSpec', { description: 'quiero hacer el juego de snake' });
+    assert.deepStrictEqual(fake.calls, [{ agent: 'sdd-spec', prompt: 'quiero hacer el juego de snake', partial: undefined }]);
   });
 
   it('generateSteering abre sdd-steering', async () => {

@@ -2,7 +2,7 @@
   "name": "sdd-studio",
   "displayName": "SDD Studio",
   "description": "Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "enriqueacordero",
   "private": true,
   "license": "MIT",
@@ -156,6 +156,9 @@
     ],
     "chatAgents": [
       {
+        "path": "./agents/sdd-spec.agent.md"
+      },
+      {
         "path": "./agents/sdd-requirements.agent.md"
       },
       {
@@ -183,6 +186,9 @@
       },
       {
         "path": "./prompts/spec-steering.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-quick.prompt.md"
       }
     ],
     "viewsContainers": {
