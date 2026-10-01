@@ -381,7 +381,7 @@ Lee el issue #42 de este repo con sus comentarios y crea un spec a partir de él
 **Qué hace el agente:**
 1. Lee el issue o el PR (y sus comentarios) con `sdd-github`, en solo lectura.
 2. Resume lo que leyó con enlaces y lo usa como fuente de los requisitos.
-3. Solo en modo **Operar** y si se lo pides, comenta, abre issues o PRs, una acción cada vez.
+3. Solo en modo **Operar** y si se lo pides, puede comentar y abrir issues y PRs, **fusionar PRs, escribir o borrar archivos y ramas y lanzar workflows** con tu cuenta; revisa cada llamada antes de aprobarla.
 
 **Obtienes / Consejo:** specs trazables al issue. Encaja en la fase de requisitos.
 </details>
