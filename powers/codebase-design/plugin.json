@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codebase-design",
+  "version": "1.0.0",
+  "description": "Vocabulario de módulos profundos para diseñar interfaces simples y testeables.",
+  "author": { "name": "Matt Pocock", "url": "https://github.com/mattpocock" },
+  "license": "MIT",
+  "keywords": ["design", "architecture", "deep modules"],
+  "repository": "https://github.com/mattpocock/skills",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/codebase-design.html"
+}

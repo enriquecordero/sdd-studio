@@ -1,0 +1,18 @@
+{
+  "displayName": "Codebase Design",
+  "icon": "🧱",
+  "category": "architecture",
+  "summary": "Diseña módulos profundos: interfaces pequeñas que esconden mucho comportamiento.",
+  "triggers": ["\"diseña la interfaz\"", "\"módulo profundo\"", "\"hacerlo testeable\""],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      { "label": "INTERFAZ", "tone": "accent", "edge": "¿qué oculta?" },
+      { "label": "PROFUNDIDAD", "tone": "blue", "edge": "menos superficie" },
+      { "label": "SEAMS", "tone": "warn", "edge": "puntos de prueba" },
+      { "label": "DOS DISEÑOS", "tone": "green", "edge": "comparar" }
+    ]
+  },
+  "gets": ["Interfaces simples", "Código más testeable", "Mejor contexto para la IA"],
+  "source": { "repo": "mattpocock/skills", "path": "skills/engineering/codebase-design", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+}

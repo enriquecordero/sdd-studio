@@ -2,7 +2,7 @@ import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { buildCatalog } from '../../../scripts/build-catalog';
 
-const EXPECTED = ['tdd', 'systematic-debugging', 'verification', 'grill-me', 'prototype', 'research'];
+const EXPECTED = ['tdd', 'systematic-debugging', 'verification', 'grill-me', 'prototype', 'research', 'domain-modeling', 'code-review', 'codebase-design'];
 
 describe('catálogo real (powers/)', () => {
   it('todos los Powers pasan el guardián y están los esperados', () => {
