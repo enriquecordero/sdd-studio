@@ -32,7 +32,7 @@ describe('SpecService + herramientas', () => {
     assert.match(await readWs('specs/export-csv/requirements.md'), /status: approved\napprovedAt: \d{4}-/);
   });
 
-  it('un archivo existente sin abrir se edita con WorkspaceEdit y se puede deshacer', async () => {
+  it('un archivo existente sin abrir se edita con WorkspaceEdit y se puede deshacer', async function () {
     const { tools } = await getApi();
     const rel = 'specs/undo-cerrado/requirements.md';
     await writeWs(rel, '---\nstatus: draft\n---\n# Requisitos\n');
@@ -43,6 +43,12 @@ describe('SpecService + herramientas', () => {
     assert.ok(doc, 'el documento se abrió para aplicar el WorkspaceEdit');
     assert.strictEqual(doc.isDirty, false);
     await vscode.window.showTextDocument(doc);
+    if (!vscode.window.state.focused) {
+      // 'undo' solo deshace en el editor con foco de texto, y sin foco de ventana del SO (p. ej. macOS no activa
+      // la ventana de tests lanzada en segundo plano) el comando es un no-op: no se puede comprobar aquí.
+      await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+      this.skip();
+    }
     await vscode.commands.executeCommand('undo');
     assert.match(doc.getText(), /status: draft/);
     await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
