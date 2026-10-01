@@ -7,6 +7,7 @@ import { registerSpecCommands } from './ui/specCommands';
 import { SpecsTreeProvider } from './ui/specsTree';
 import { registerTaskCommands } from './ui/taskCommands';
 import { SpecLensProvider } from './ui/taskLens';
+import { offerThemeOnce } from './ui/themePrompt';
 import { SpecService } from './workspace/specService';
 import { SpecStore } from './workspace/specStore';
 
@@ -44,6 +45,7 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
   );
 
   void runDoctorOnce(context);
+  void offerThemeOnce(context);
 
   return {
     store,

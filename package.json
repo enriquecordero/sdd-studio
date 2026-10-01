@@ -273,7 +273,10 @@
           "when": "false"
         }
       ]
-    }
+    },
+    "themes": [
+      { "label": "SDD Studio Dark", "uiTheme": "vs-dark", "path": "./themes/sdd-studio-dark-color-theme.json" }
+    ]
   },
   "scripts": {
     "build": "node esbuild.mjs",
