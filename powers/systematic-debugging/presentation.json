@@ -1,0 +1,18 @@
+{
+  "displayName": "Debugging sistemático",
+  "icon": "🐞",
+  "category": "debugging",
+  "summary": "Encuentra la causa raíz con evidencia antes de tocar el código.",
+  "triggers": ["\"falla…\"", "\"tengo un error\"", "\"el test está rojo\"", "\"no funciona\""],
+  "diagram": {
+    "kind": "funnel",
+    "nodes": [
+      { "label": "SÍNTOMA", "tone": "red", "edge": "reproducir" },
+      { "label": "EVIDENCIA", "tone": "warn", "edge": "comparar" },
+      { "label": "HIPÓTESIS", "tone": "blue", "edge": "probar una" },
+      { "label": "CAUSA RAÍZ", "tone": "green", "edge": "test + fix" }
+    ]
+  },
+  "gets": ["Arreglos con la causa probada", "Un test que reproduce el bug", "Nada de parches a ciegas"],
+  "source": { "repo": "obra/superpowers", "path": "skills/systematic-debugging", "commit": "8ca22dba9a94f28898bbce59f2537ff4d87c747d", "author": "Jesse Vincent", "license": "MIT" }
+}

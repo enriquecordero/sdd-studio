@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "verification",
+  "version": "1.0.0",
+  "description": "Verificación antes de terminar: nada está listo sin ejecutar la comprobación y leer su salida.",
+  "author": { "name": "Jesse Vincent", "url": "https://github.com/obra" },
+  "license": "MIT",
+  "keywords": ["verification", "testing", "done"],
+  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/verification.html"
+}
