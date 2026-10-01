@@ -47,6 +47,26 @@ describe('manifiesto', () => {
     expect(design).toMatch(/diagrama ASCII de flujo/);
   });
 
+  it('cada agente incluye sus reglas clave (superpowers / mattpocock) y sigue siendo conciso', () => {
+    const markers: Record<string, (string | RegExp)[]> = {
+      'sdd-spec': ['HECHO CON DUDAS', 'respuesta recomendada'],
+      'sdd-requirements': ['## Fuera de alcance', /autorrevisión/i],
+      'sdd-design': ['enfoques', 'seam'],
+      'sdd-tasks': ['Bloqueada por', 'Verificación:', 'Interfaces'],
+      'sdd-implement': ['HECHO CON DUDAS', '3 arreglos', 'evidencia'],
+      'sdd-steering': ['evidencia'],
+    };
+    for (const name of AGENTS) {
+      const file = join(root, 'agents', `${name}.agent.md`);
+      const text = readFileSync(file, 'utf8');
+      for (const marker of markers[name]) {
+        if (typeof marker === 'string') expect(text, `${name} debe contener "${marker}"`).toContain(marker);
+        else expect(text, `${name} debe cumplir ${marker}`).toMatch(marker);
+      }
+      expect(readFileSync(file).length, `${name} pesa demasiado`).toBeLessThan(7000);
+    }
+  });
+
   it('los agentes de fase no tienen la herramienta de edición genérica', () => {
     for (const name of ['sdd-requirements', 'sdd-design', 'sdd-tasks']) {
       const tools = frontMatterFields(readFileSync(join(root, 'agents', `${name}.agent.md`), 'utf8')).get('tools')!;

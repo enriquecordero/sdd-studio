@@ -31,3 +31,6 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 - [ ] /grill-me y /poteto-mode se invocan explícitamente (no se cargan solos).
 - [ ] "Buscar actualizaciones" sin red muestra un aviso y la galería sigue funcionando.
 - [ ] La página https://enriquecordero.github.io/sdd-studio/powers/ muestra las mismas tarjetas y cada detalle.
+
+## Agentes reforzados (v0.4.0)
+- [ ] Un spec nuevo incluye "Fuera de alcance", enfoques con recomendación en el diseño y tareas con Archivos/Interfaces/Verificación; sdd-implement termina con "Estado:".

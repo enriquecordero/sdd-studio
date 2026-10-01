@@ -90,6 +90,8 @@ flowchart LR
 
 Los agentes de requisitos, diseño y tareas **no pueden tocar tu código**: solo escriben documentos de spec mediante la herramienta `sdd_writeSpecDoc`.
 
+Las reglas de cada agente y su fuente: [`docs/agents.md`](docs/agents.md).
+
 ### 💬 Atajos en el chat
 
 | Comando | Para qué |
@@ -501,6 +503,7 @@ Más documentación: [`docs/spec.md`](docs/spec.md) (spec del flujo SDD), [`docs
 ## 🙏 Créditos y licencia
 
 - **Powers:** [mattpocock/skills](https://github.com/mattpocock/skills) (Matt Pocock), [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent) y [cursor/plugins · pstack](https://github.com/cursor/plugins) (Lauren Tan), todos MIT. Avisos completos en [`NOTICE`](NOTICE).
+- **Reglas de los agentes:** inspiradas en [obra/superpowers](https://github.com/obra/superpowers) y [mattpocock/skills](https://github.com/mattpocock/skills) (MIT); detalle en [`docs/agents.md`](docs/agents.md).
 - **Tema SDD Studio Dark:** basado en [Kiro Theme](https://github.com/BioHazard786/kiro-theme-vscode) (MIT).
 - Proyecto independiente, inspirado en el flujo de specs de Kiro. Sin afiliación con AWS ni Kiro.
 - Licencia [MIT](LICENSE.md) © 2026 Enrique Cordero.
