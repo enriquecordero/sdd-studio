@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "publisher": "enriqueacordero",
   "private": true,
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/enriquecordero/sdd-studio"
@@ -155,17 +155,35 @@
       }
     ],
     "chatAgents": [
-      { "path": "./agents/sdd-requirements.agent.md" },
-      { "path": "./agents/sdd-design.agent.md" },
-      { "path": "./agents/sdd-tasks.agent.md" },
-      { "path": "./agents/sdd-implement.agent.md" },
-      { "path": "./agents/sdd-steering.agent.md" }
+      {
+        "path": "./agents/sdd-requirements.agent.md"
+      },
+      {
+        "path": "./agents/sdd-design.agent.md"
+      },
+      {
+        "path": "./agents/sdd-tasks.agent.md"
+      },
+      {
+        "path": "./agents/sdd-implement.agent.md"
+      },
+      {
+        "path": "./agents/sdd-steering.agent.md"
+      }
     ],
     "chatPromptFiles": [
-      { "path": "./prompts/spec-new.prompt.md" },
-      { "path": "./prompts/spec-bugfix.prompt.md" },
-      { "path": "./prompts/spec-run.prompt.md" },
-      { "path": "./prompts/spec-steering.prompt.md" }
+      {
+        "path": "./prompts/spec-new.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-bugfix.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-run.prompt.md"
+      },
+      {
+        "path": "./prompts/spec-steering.prompt.md"
+      }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -308,7 +326,11 @@
       ]
     },
     "themes": [
-      { "label": "SDD Studio Dark", "uiTheme": "vs-dark", "path": "./themes/sdd-studio-dark-color-theme.json" }
+      {
+        "label": "SDD Studio Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/sdd-studio-dark-color-theme.json"
+      }
     ]
   },
   "scripts": {
