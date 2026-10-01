@@ -34,3 +34,18 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 
 ## Agentes reforzados (v0.4.0)
 - [ ] Un spec nuevo incluye "Fuera de alcance", enfoques con recomendación en el diseño y tareas con Archivos/Interfaces/Verificación; sdd-implement termina con "Estado:".
+
+## Powers con MCP (v0.5.0)
+- [ ] La galería muestra el filtro "🔌 Con MCP" y las categorías Dev core, Documentación y Cloud; las tarjetas MCP llevan "🔌 MCP" y el póster, la franja "SERVIDORES MCP".
+- [ ] Activar **Context7** muestra el aviso (servidor remoto, sin prerrequisitos), crea `.vscode/mcp.json` con `sdd-context7` y el lock pasa a `schemaVersion 2`; "Ver servidores MCP" abre la lista.
+- [ ] Iniciar `sdd-context7`, confiar en él y pedir a Copilot (modo Agent): "Usa Context7 para ver cómo se define un middleware en Next.js 15…" → la respuesta cita la librería.
+- [ ] Activar **GitHub** con la cuenta real (Copilot Enterprise): iniciar sesión cuando VS Code lo pida y pedir "Lee el issue #… de este repo" → lo resume con enlace.
+- [ ] Activar **AWS**: el aviso dice que ejecuta código local (`uvx awslabs.aws-api-mcp-server@1.5.6`) y avisa si falta `uv`; al iniciar, VS Code pide perfil y región.
+- [ ] Cambiar AWS a **Operar**: aparece el aviso; `.vscode/mcp.json` pasa a tener `REQUIRE_MUTATION_CONSENT` y no `READ_OPERATIONS_ONLY`; el selector resalta "Operar" en ámbar. Volver a **Solo lectura** lo revierte.
+- [ ] Editar a mano `sdd-aws` en `.vscode/mcp.json` y cambiar de modo → pregunta antes de sobrescribir.
+- [ ] Con `"chat.mcp.access": "none"` en la configuración, la galería muestra "🔒 Bloqueado por tu organización" y el Diagnóstico da el error `mcp-policy`; los Powers sin MCP se siguen activando.
+- [ ] El Diagnóstico, con AWS y Azure activos y sin `az`, muestra `mcp-prereq-az` con el enlace de instalación, y la línea informativa de "MCP servers in Copilot".
+- [ ] Borrar `sdd-context7` de `.vscode/mcp.json` → el Diagnóstico ofrece **Reparar** y la entrada vuelve.
+- [ ] Desactivar todos los Powers MCP: si `.vscode/mcp.json` lo creó SDD Studio, desaparece; si ya existía, queda como estaba (comentarios incluidos).
+- [ ] Las páginas https://enriquecordero.github.io/sdd-studio/powers/context7.html y `/aws.html` muestran la franja MCP y "Cómo usarlo"; `/powers/catalog.json` (v1) no incluye Powers MCP y `/powers/catalog-v2.json` sí.
+- [ ] AWS en **Operar**: al pedir un cambio, el servidor pide confirmación (requiere que VS Code soporte *elicitation* MCP); si no la pide, anótalo en docs/follow-ups.md.
