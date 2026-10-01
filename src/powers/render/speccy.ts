@@ -1,0 +1,19 @@
+/** Speccy, la mascota de SDD Studio. idSuffix evita ids de gradiente repetidos en una misma página. */
+export function speccySvg(idSuffix: string, size = 96): string {
+  const g = `speccy-g-${idSuffix}`;
+  return (
+    `<svg class="pw-mascot" width="${size}" height="${size}" viewBox="0 0 120 120" role="img" aria-label="Speccy, la mascota de SDD Studio" xmlns="http://www.w3.org/2000/svg">` +
+    `<defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a6ff"/><stop offset="1" stop-color="#7138cc"/></linearGradient></defs>` +
+    `<path d="M28 10 H74 L94 30 V108 a6 6 0 0 1 -6 6 H28 a6 6 0 0 1 -6 -6 V16 a6 6 0 0 1 6 -6 Z" fill="#2a2530" stroke="url(#${g})" stroke-width="4" stroke-linejoin="round"/>` +
+    `<path d="M74 10 V30 H94" fill="none" stroke="url(#${g})" stroke-width="4" stroke-linejoin="round"/>` +
+    `<circle cx="46" cy="46" r="7" fill="#b080ff"/><circle cx="70" cy="46" r="7" fill="#b080ff"/>` +
+    `<circle cx="48" cy="44" r="2.5" fill="#fff"/><circle cx="72" cy="44" r="2.5" fill="#fff"/>` +
+    `<path d="M52 58 q6 5 12 0" stroke="#b080ff" stroke-width="3" fill="none" stroke-linecap="round"/>` +
+    `<path d="M34 77 l4 4 l8 -8" stroke="#80ffb5" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<rect x="52" y="74" width="28" height="5" rx="2.5" fill="#3a3342"/>` +
+    `<path d="M34 93 l4 4 l8 -8" stroke="#80ffb5" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<rect x="52" y="90" width="20" height="5" rx="2.5" fill="#3a3342"/>` +
+    `<path d="M100 76 L86 96 H95 L91 114 L108 90 H99 L104 76 Z" fill="#ffd27a" stroke="#16131a" stroke-width="2" stroke-linejoin="round"/>` +
+    `</svg>`
+  );
+}

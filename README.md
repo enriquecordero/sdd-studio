@@ -1,3 +1,5 @@
+<p align="center"><img src="media/speccy.png" width="120" alt="Speccy, la mascota de SDD Studio"></p>
+
 # SDD Studio
 
 Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.
@@ -18,6 +20,14 @@ Requisitos: VS Code ≥ la versión de `engines.vscode`, GitHub Copilot Chat con
 **Quick Spec** genera requisitos, diseño y tareas de una vez (sin aprobar cada fase) y deja el spec listo para implementar. Atajos en el chat: `/spec-new`, `/spec-bugfix`, `/spec-quick`.
 
 Steering del proyecto: **Generar steering** (crea `.github/instructions/{product,tech,structure}.instructions.md`).
+
+## Powers
+Skills de la comunidad adaptados para Copilot (TDD, Debugging sistemático, Verificación, Grill Me, Domain Modeling, Code Review, Codebase Design, Prototype, Research y Poteto Mode).
+
+- **Galería:** panel ⚡ → Powers → **Abrir galería…** → **+ Activar en este repo**. El skill se copia a `.github/skills/<id>/` y queda registrado en `.github/powers.lock.json`. Commitea `.github/` para compartirlo con tu equipo.
+- **Actualizaciones:** **Buscar actualizaciones** descarga el catálogo más reciente (opcional; sin red se usa el incluido).
+- **Catálogo web:** https://enriquecordero.github.io/sdd-studio/powers/
+- **Créditos:** cada Power conserva su licencia y autor en `powers/<id>/LICENSE` y `UPSTREAM.md`.
 
 ## Formato
 - Front matter de cada documento: `status: draft | approved`.

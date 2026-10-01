@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "systematic-debugging",
+  "version": "1.0.0",
+  "description": "Depuración sistemática: encuentra la causa raíz con evidencia antes de proponer un arreglo.",
+  "author": { "name": "Jesse Vincent", "url": "https://github.com/obra" },
+  "license": "MIT",
+  "keywords": ["debugging", "root cause", "bugs"],
+  "repository": "https://github.com/obra/superpowers",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/systematic-debugging.html"
+}

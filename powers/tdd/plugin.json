@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "tdd",
+  "version": "1.0.0",
+  "description": "Desarrollo guiado por pruebas: rojo → verde → refactor, con tests de integración primero.",
+  "author": { "name": "Matt Pocock", "url": "https://github.com/mattpocock" },
+  "license": "MIT",
+  "keywords": ["tdd", "testing", "red-green-refactor", "tests"],
+  "repository": "https://github.com/mattpocock/skills",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/tdd.html"
+}

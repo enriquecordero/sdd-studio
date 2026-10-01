@@ -2,7 +2,7 @@
   "name": "sdd-studio",
   "displayName": "SDD Studio",
   "description": "Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "enriqueacordero",
   "private": true,
   "license": "MIT",
@@ -256,6 +256,35 @@
         "title": "Diagnóstico",
         "category": "SDD Studio",
         "icon": "$(pulse)"
+      },
+      {
+        "command": "sddStudio.openPowers",
+        "title": "Abrir galería de Powers",
+        "category": "SDD Studio",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "sddStudio.checkPowerUpdates",
+        "title": "Buscar actualizaciones de Powers",
+        "category": "SDD Studio",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "sddStudio.activatePower",
+        "title": "Activar Power",
+        "category": "SDD Studio",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "sddStudio.updatePower",
+        "title": "Actualizar Power",
+        "category": "SDD Studio",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "sddStudio.deactivatePower",
+        "title": "Desactivar Power",
+        "category": "SDD Studio"
       }
     ],
     "menus": {
@@ -274,6 +303,11 @@
           "command": "sddStudio.doctor",
           "when": "view == sddStudio.specs",
           "group": "navigation@3"
+        },
+        {
+          "command": "sddStudio.openPowers",
+          "when": "view == sddStudio.specs",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -310,6 +344,19 @@
           "command": "sddStudio.markTaskDone",
           "when": "view == sddStudio.specs && viewItem =~ /^task-(todo|in_progress)$/",
           "group": "sdd@2"
+        },
+        {
+          "command": "sddStudio.updatePower",
+          "when": "view == sddStudio.specs && viewItem == power-update",
+          "group": "inline"
+        },
+        {
+          "command": "sddStudio.updatePower",
+          "when": "view == sddStudio.specs && viewItem == power-update"
+        },
+        {
+          "command": "sddStudio.deactivatePower",
+          "when": "view == sddStudio.specs && viewItem =~ /^power-/"
         }
       ],
       "commandPalette": [
@@ -328,6 +375,18 @@
         {
           "command": "sddStudio.openRequirements",
           "when": "false"
+        },
+        {
+          "command": "sddStudio.activatePower",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.updatePower",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.deactivatePower",
+          "when": "false"
         }
       ]
     },
@@ -339,18 +398,23 @@
       }
     ]
   },
+  "icon": "media/icon.png",
   "scripts": {
-    "build": "node esbuild.mjs",
+    "build:catalog": "tsx scripts/build-catalog.ts",
+    "build:icon": "tsx scripts/build-icon.ts",
+    "build:site": "npm run build:catalog && tsx scripts/build-site.ts",
+    "build": "npm run build:catalog && node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "vscode:prepublish": "npm run build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src test",
+    "lint": "eslint src test scripts",
     "test:unit": "vitest run",
     "compile:tests": "tsc -p tsconfig.test.json",
     "test:integration": "npm run build && npm run compile:tests && vscode-test",
     "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.6.3",
     "@types/vscode": "1.138.0",
@@ -360,6 +424,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.11.0",
     "mocha": "^12.0.3",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"

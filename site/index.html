@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDD Studio</title>
+<meta name="description" content="Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot: requisitos, diseño y tareas con aprobación en cada paso.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="speccy.svg">
+<style>
+  :root {
+    --bg:#16131a; --bg1:#1a171e; --bg2:#211d25; --bg3:#2a2530; --bd:#3a3342;
+    --ac:#b080ff; --ac2:#c9a6ff; --btn:#7138cc; --tx:#e8e3ef; --mu:#9a92a6;
+    --ok:#80ffb5; --bl:#8dc8fb; --wa:#ffd27a; --kw:#e2d3fe;
+    --mono:"JetBrains Mono", "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--tx); font-family:Inter, -apple-system, "Segoe UI", system-ui, sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  a { color:var(--ac); text-decoration:none; }
+  a:hover { color:var(--ac2); }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 20px; }
+  code, pre { font-family:var(--mono); }
+
+  /* nav */
+  nav { position:sticky; top:0; z-index:10; background:rgba(22,19,26,.85); backdrop-filter:blur(10px); border-bottom:1px solid rgba(58,51,66,.6); }
+  nav .wrap { display:flex; align-items:center; gap:24px; height:60px; }
+  .logo { display:flex; align-items:center; gap:8px; font-weight:700; color:var(--tx); font-size:17px; }
+  .logo svg { width:22px; height:22px; }
+  nav .links { display:flex; gap:22px; margin-left:auto; font-size:14px; }
+  nav .links a { color:var(--mu); }
+  nav .links a:hover { color:var(--tx); }
+  @media (max-width:720px){ nav .links a:not(.gh) { display:none; } }
+
+  /* hero */
+  .hero { position:relative; overflow:hidden; padding:96px 0 72px; text-align:center; }
+  .hero::before { content:""; position:absolute; inset:-200px -100px auto; height:620px; background:radial-gradient(ellipse at 50% 30%, rgba(113,56,204,.45), transparent 60%); pointer-events:none; }
+  .pill { display:inline-flex; gap:8px; align-items:center; font-size:13px; color:var(--ac2); background:rgba(176,128,255,.12); border:1px solid rgba(176,128,255,.3); padding:4px 12px; border-radius:999px; position:relative; }
+  .hero h1 { position:relative; font-size:clamp(36px, 6vw, 64px); line-height:1.08; letter-spacing:-.02em; margin:22px auto 18px; max-width:880px; font-weight:800; }
+  .hero h1 em { font-style:normal; background:linear-gradient(90deg, var(--ac), #8dc8fb); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p.lead { position:relative; font-size:clamp(17px, 2.2vw, 20px); color:var(--mu); max-width:680px; margin:0 auto 32px; }
+  .cta { position:relative; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .b { display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:10px; font-weight:600; font-size:15px; }
+  .b.p { background:var(--btn); color:#fff; box-shadow:0 8px 30px rgba(113,56,204,.4); }
+  .b.p:hover { background:#8247e0; color:#fff; }
+  .b.s { border:1px solid var(--bd); color:var(--tx); background:rgba(42,37,48,.6); }
+  .b.s:hover { border-color:var(--ac); color:var(--tx); }
+  .hero .note { position:relative; margin-top:16px; font-size:13px; color:var(--mu); }
+
+  section { padding:80px 0; }
+  .eyebrow { font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ac); font-weight:600; }
+  h2 { font-size:clamp(28px, 4vw, 40px); letter-spacing:-.015em; margin:8px 0 12px; line-height:1.15; }
+  .sub { color:var(--mu); max-width:680px; margin:0 0 40px; font-size:17px; }
+
+  /* flow */
+  .flow { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; counter-reset:step; }
+  @media (max-width:900px){ .flow { grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:520px){ .flow { grid-template-columns:1fr; } }
+  .step { background:var(--bg2); border:1px solid var(--bd); border-radius:14px; padding:20px; position:relative; }
+  .step::before { counter-increment:step; content:counter(step); position:absolute; top:16px; right:18px; font-size:42px; font-weight:800; color:rgba(176,128,255,.14); line-height:1; }
+  .step h3 { margin:0 0 4px; font-size:18px; }
+  .step .agent { font-family:var(--mono); font-size:12px; color:var(--ac); }
+  .step p { color:var(--mu); font-size:14px; margin:10px 0 0; }
+  .step .gate { margin-top:14px; font-size:12px; color:var(--ok); border-top:1px dashed var(--bd); padding-top:10px; }
+
+  /* window mockup */
+  .win { background:var(--bg2); border:1px solid var(--bd); border-radius:12px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(176,128,255,.08); font-size:13px; }
+  .titlebar { background:var(--bg1); padding:9px 14px; font-size:12px; color:var(--mu); display:flex; gap:8px; align-items:center; }
+  .dot { width:11px; height:11px; border-radius:50%; display:inline-block; }
+  .row { display:flex; min-height:470px; }
+  .act { width:46px; background:var(--bg1); display:flex; flex-direction:column; align-items:center; padding-top:12px; gap:16px; color:var(--mu); font-size:17px; flex-shrink:0; }
+  .act .on { color:var(--ac); border-left:2px solid var(--ac); width:100%; text-align:center; }
+  .side { width:250px; background:#1d1a21; border-right:1px solid var(--bd); padding:10px 0; flex-shrink:0; }
+  .side .hd { font-size:11px; letter-spacing:.08em; color:var(--mu); padding:4px 14px 8px; display:flex; justify-content:space-between; }
+  .it { padding:3px 14px; display:flex; justify-content:space-between; align-items:center; gap:8px; white-space:nowrap; }
+  .it.sub2 { padding-left:30px; color:var(--mu); }
+  .it.sub3 { padding-left:46px; color:var(--mu); font-size:12px; }
+  .it.sel { background:rgba(176,128,255,.14); color:var(--tx); }
+  .tag { font-size:10px; padding:1px 7px; border-radius:9px; background:var(--bd); color:var(--mu); }
+  .tag.ac { background:rgba(176,128,255,.2); color:var(--ac); }
+  .tag.ok { background:rgba(128,255,181,.15); color:var(--ok); }
+  .editor { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .tabs { display:flex; background:var(--bg1); font-size:12px; }
+  .tabs span { padding:8px 14px; color:var(--mu); }
+  .tabs span.on { background:var(--bg2); color:var(--tx); border-top:1px solid var(--ac); }
+  .code { font-family:var(--mono); font-size:12.5px; padding:12px 16px; line-height:1.6; overflow-x:auto; }
+  .lens { font-family:Inter, system-ui, sans-serif; font-size:11px; color:var(--mu); }
+  .lens b { color:var(--ac); font-weight:600; }
+  .h { color:var(--ac); font-weight:600; }
+  .mu { color:var(--mu); } .x { color:var(--ok); } .ip { color:var(--wa); } .k { color:var(--bl); }
+  .chat { width:320px; background:var(--bg1); border-left:1px solid var(--bd); display:flex; flex-direction:column; flex-shrink:0; }
+  .chat .top { padding:9px 12px; border-bottom:1px solid var(--bd); display:flex; justify-content:space-between; color:var(--mu); font-size:11px; }
+  .sel2 { background:var(--bg3); padding:1px 8px; border-radius:5px; color:var(--tx); }
+  .msg { margin:10px 12px; padding:9px 11px; border-radius:8px; font-size:12.5px; }
+  .msg.u { background:var(--bg3); }
+  .msg.a { border:1px solid var(--bd); }
+  .hand { display:flex; flex-direction:column; gap:6px; margin:4px 12px; }
+  .hand span { border:1px solid var(--ac); color:var(--ac); padding:6px 10px; border-radius:6px; font-size:12px; }
+  .hand span.pri { background:var(--btn); color:#fff; border-color:var(--btn); }
+  .input { margin:auto 12px 12px; border:1px solid var(--bd); border-radius:8px; padding:8px; color:var(--mu); display:flex; justify-content:space-between; }
+  .shot { overflow-x:auto; padding-bottom:6px; }
+  .shot > .win { min-width:1000px; }
+  .caption { color:var(--mu); font-size:13px; margin-top:12px; text-align:center; }
+
+  /* features */
+  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  @media (max-width:900px){ .grid { grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:560px){ .grid { grid-template-columns:1fr; } }
+  .card { background:var(--bg2); border:1px solid var(--bd); border-radius:14px; padding:22px; transition:border-color .2s, transform .2s; }
+  .card:hover { border-color:rgba(176,128,255,.5); transform:translateY(-2px); }
+  .card .ico { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:rgba(176,128,255,.15); font-size:20px; margin-bottom:14px; }
+  .card h3 { margin:0 0 6px; font-size:17px; }
+  .card p { margin:0; color:var(--mu); font-size:14.5px; }
+
+  /* format */
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:860px){ .two { grid-template-columns:1fr; } }
+  .file { background:var(--bg2); border:1px solid var(--bd); border-radius:12px; overflow:hidden; }
+  .file .fn { background:var(--bg1); padding:8px 14px; font-family:var(--mono); font-size:12px; color:var(--mu); border-bottom:1px solid var(--bd); }
+  .file pre { margin:0; padding:16px; font-size:13px; line-height:1.65; overflow-x:auto; color:var(--tx); }
+
+  /* install */
+  .install { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+  @media (max-width:860px){ .install { grid-template-columns:1fr; } }
+  ol.steps { margin:0; padding:0; list-style:none; counter-reset:i; }
+  ol.steps li { counter-increment:i; position:relative; padding:0 0 22px 48px; }
+  ol.steps li::before { content:counter(i); position:absolute; left:0; top:0; width:32px; height:32px; border-radius:50%; background:var(--btn); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+  ol.steps li b { display:block; }
+  ol.steps li span { color:var(--mu); font-size:14.5px; }
+  .term { background:#0f0d12; border:1px solid var(--bd); border-radius:12px; padding:18px; font-family:var(--mono); font-size:13px; overflow-x:auto; }
+  .term .pr { color:var(--ok); user-select:none; }
+  .term .cm { color:var(--mu); }
+  .req { margin-top:16px; font-size:14px; color:var(--mu); }
+  .req li { margin:4px 0; }
+
+  /* powers */
+  .powers { background:linear-gradient(135deg, rgba(113,56,204,.25), rgba(33,29,37,.6)); border:1px solid rgba(176,128,255,.3); border-radius:18px; padding:36px; display:grid; grid-template-columns:1.1fr 1fr; gap:28px; align-items:center; }
+  @media (max-width:860px){ .powers { grid-template-columns:1fr; padding:24px; } }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { font-size:13px; padding:6px 12px; border-radius:999px; background:rgba(22,19,26,.6); border:1px solid var(--bd); }
+  .chip small { color:var(--mu); }
+
+  footer { border-top:1px solid var(--bd); padding:36px 0 48px; color:var(--mu); font-size:13.5px; }
+  footer .wrap { display:flex; gap:24px; justify-content:space-between; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#"><svg viewBox="0 0 24 24"><path fill="#b080ff" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>SDD Studio</a>
+    <div class="links">
+      <a href="#flujo">Cómo funciona</a>
+      <a href="#caracteristicas">Características</a>
+      <a href="#formato">Formato</a>
+      <a href="powers/">Powers</a>
+      <a href="#instalar">Instalar</a>
+      <a class="gh" href="https://github.com/enriquecordero/sdd-studio">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <img src="speccy.svg" alt="Speccy, la mascota de SDD Studio" width="120" height="120" style="position:relative;display:block;margin:0 auto 14px;filter:drop-shadow(0 10px 30px rgba(113,56,204,.5))">
+    <span class="pill">⚡ v0.3.0 · extensión para VS Code</span>
+    <h1>Spec-Driven Development <em>estilo Kiro</em>, dentro de VS Code</h1>
+    <p class="lead">Requisitos → diseño → tareas, con tu aprobación en cada paso. Ejecuta las tareas una a una con GitHub Copilot, sin cambiar de editor.</p>
+    <div class="cta">
+      <a class="b p" href="#instalar">Instalar</a>
+      <a class="b s" href="https://github.com/enriquecordero/sdd-studio">Ver el código ↗</a>
+    </div>
+    <div class="note">La IA la pone GitHub Copilot (agent mode). Sin backend propio.</div>
+  </div>
+</header>
+
+<section id="flujo">
+  <div class="wrap">
+    <div class="eyebrow">Cómo funciona</div>
+    <h2>Un spec, cuatro fases, cero sorpresas</h2>
+    <p class="sub">Escribe tu idea en el chat, por ejemplo "quiero hacer el juego de Snake". El agente <code>sdd-spec</code> te pregunta con una tarjeta si es una funcionalidad, un bug o un Quick Spec, y delega cada fase en su subagente. Nada avanza hasta que tú lo apruebas, y las aprobaciones las aplica la extensión con código, no el modelo.</p>
+    <div class="flow">
+      <div class="step"><h3>Requisitos</h3><div class="agent">sdd-requirements</div><p>Historias de usuario y criterios de aceptación en formato EARS. Para bugs: comportamiento actual, esperado y lo que no debe cambiar.</p><div class="gate">✓ Aprobar requisitos → Diseño</div></div>
+      <div class="step"><h3>Diseño</h3><div class="agent">sdd-design</div><p>Arquitectura, interfaces, modelos de datos, errores y estrategia de tests, a partir del código real del repo.</p><div class="gate">✓ Aprobar diseño → Tareas</div></div>
+      <div class="step"><h3>Tareas</h3><div class="agent">sdd-tasks</div><p>Plan de implementación en tareas pequeñas, cada una trazada a los criterios que cubre.</p><div class="gate">✓ Aprobar tareas → Implementar</div></div>
+      <div class="step"><h3>Implementación</h3><div class="agent">sdd-implement</div><p>Una tarea por vez: test primero, código mínimo, verificación real. Tú confirmas cuándo está hecha.</p><div class="gate">✓ Marcar hecha → siguiente</div></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="shot">
+      <div class="win">
+        <div class="titlebar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>&nbsp; tasks.md — checkout-app — SDD Studio Dark</div>
+        <div class="row">
+          <div class="act"><span>📄</span><span>🔍</span><span>⑂</span><span class="on">⚡</span></div>
+          <div class="side">
+            <div class="hd"><span>SDD STUDIO · SPECS</span><span>＋ ⟳ ♡</span></div>
+            <div class="it"><span>＋ Nuevo spec</span></div>
+            <div class="it sel"><span>▾ pagos-checkout</span><span class="tag ac">3/7 tareas</span></div>
+            <div class="it sub2"><span>✓ requirements.md</span><span class="tag ok">aprobado</span></div>
+            <div class="it sub2"><span>✓ design.md</span><span class="tag ok">aprobado</span></div>
+            <div class="it sub2" style="color:var(--tx)"><span>▾ tasks.md</span><span class="tag ok">aprobado</span></div>
+            <div class="it sub3"><span><span class="x">●</span> 1 Modelo PaymentIntent</span></div>
+            <div class="it sub3"><span><span class="ip">◐</span> 2.1 Validar carrito</span><span class="lens"><b>✓</b></span></div>
+            <div class="it sub3"><span>○ 2.2 Idempotency-Key</span><span class="lens"><b>▶ ✓</b></span></div>
+            <div class="it"><span>▸ login-sso</span><span class="tag ac">Diseño</span></div>
+            <div class="it"><span>▸ 🐞 timeout-api</span><span class="tag ac">Bug</span></div>
+            <div class="it"><span>▸ export-csv</span><span class="tag">Requisitos</span></div>
+            <div class="hd" style="margin-top:16px"><span>STEERING</span></div>
+            <div class="it sub2" style="padding-left:14px"><span>📘 product</span><span class="tag">**</span></div>
+            <div class="it sub2" style="padding-left:14px"><span>🛠 tech</span><span class="tag">**</span></div>
+            <div class="it sub2" style="padding-left:14px"><span>🗂 structure</span><span class="tag">**/*.ts</span></div>
+            <div class="hd" style="margin-top:16px"><span>POWERS</span></div>
+            <div class="it sub2" style="padding-left:14px"><span>Llegan en la próxima versión</span></div>
+          </div>
+          <div class="editor">
+            <div class="tabs"><span>requirements.md</span><span>design.md</span><span class="on">tasks.md</span></div>
+            <div class="code">
+<div class="lens">✓ Requisitos → ✓ Diseño → ✓ Tareas → <b>● Implementación</b></div>
+<div class="mu">---</div><div class="mu">status: approved</div><div class="mu">---</div>
+<div class="h"># Plan de implementación — pagos-checkout</div>
+<br>
+<div class="lens">✓ completada</div>
+<div><span class="x">- [x]</span> 1. Modelo <b>PaymentIntent</b> y repositorio</div>
+<div class="mu">&nbsp;&nbsp;- _Requisitos: 1.1, 1.2_</div>
+<div><span class="ip">- [-]</span> 2. Endpoint POST /checkout</div>
+<div class="lens">&nbsp;&nbsp;◐ en curso · <b>✓ Marcar hecha</b> · Ver requisitos</div>
+<div>&nbsp;&nbsp;<span class="ip">- [-]</span> 2.1 Validar carrito y montos</div>
+<div class="mu">&nbsp;&nbsp;&nbsp;&nbsp;- _Requisitos: 2.1, 2.2_</div>
+<div class="lens">&nbsp;&nbsp;<b>▶ Ejecutar tarea</b> · Ver requisitos</div>
+<div>&nbsp;&nbsp;- [ ] 2.2 Idempotency-Key en reintentos</div>
+<div class="mu">&nbsp;&nbsp;&nbsp;&nbsp;- _Requisitos: 2.3_</div>
+<div class="lens"><b>▶ Ejecutar tarea</b></div>
+<div>- [ ]* 3. Métricas de conversión <span class="mu">(opcional)</span></div>
+            </div>
+          </div>
+          <div class="chat">
+            <div class="top"><span>COPILOT CHAT</span><span>Agente: <span class="sel2">sdd-implement ▾</span></span></div>
+            <div class="msg u">Ejecuta la tarea 2.1 del spec "pagos-checkout": Validar carrito y montos<br><span class="mu">#file:specs/pagos-checkout/requirements.md …</span></div>
+            <div class="msg a">Leí los criterios 2.1–2.2 y el diseño.<br><br>✎ <span class="k">src/checkout/validate.ts</span><br>✎ <span class="k">src/checkout/validate.test.ts</span><br><br><span class="x">✓ 12 tests pasan</span> · lint OK<br><br>WHEN carrito vacío → 400 · IF monto ≠ suma → 422.</div>
+            <div class="hand"><span class="pri">✓ Marcar hecha → siguiente</span><span>↺ Revisar contra requisitos</span></div>
+            <div class="input"><span>Pregunta o usa /spec-…</span><span>⏎</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="caption">Panel Specs, CodeLens sobre cada tarea y Copilot con el agente correcto. Ilustración del flujo.</div>
+  </div>
+</section>
+
+<section id="caracteristicas">
+  <div class="wrap">
+    <div class="eyebrow">Características</div>
+    <h2>Lo de Kiro, en el editor que ya usas</h2>
+    <p class="sub">Construido solo con funciones GA de VS Code y Copilot: custom agents, prompt files, instructions y herramientas de extensión.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">🌲</div><h3>Panel Specs</h3><p>Cada spec con su fase y progreso. Aprueba documentos y ejecuta o marca tareas desde el propio árbol.</p></div>
+      <div class="card"><div class="ico">▶</div><h3>Ejecutar tarea</h3><p>Un clic sobre la tarea la marca en curso y abre Copilot con <code>sdd-implement</code>, la tarea y sus requisitos como contexto.</p></div>
+      <div class="card"><div class="ico">🔒</div><h3>Aprobaciones deterministas</h3><p>Las herramientas <code>sdd_*</code> cambian estados con código. Los agentes de requisitos, diseño y tareas no pueden tocar tu código.</p></div>
+      <div class="card"><div class="ico">🧭</div><h3>Steering nativo</h3><p><code>product</code>, <code>tech</code> y <code>structure</code> como instrucciones de Copilot: guían también cualquier chat normal.</p></div>
+      <div class="card"><div class="ico">⚡</div><h3>Quick Spec</h3><p>Cuando tienes prisa: requisitos, diseño y tareas generados de una vez, listos para ejecutar. Desde la tarjeta o con <code>/spec-quick</code>.</p></div>
+      <div class="card"><div class="ico">💬</div><h3>Empieza desde el chat</h3><p>Sin formularios: "+ Nuevo spec" abre Copilot con <code>sdd-spec</code>. Te pregunta lo justo con tarjetas clicables y elige el nombre del spec por ti.</p></div>
+      <div class="card"><div class="ico">🐞</div><h3>Specs de bugfix</h3><p>Comportamiento actual, esperado y de regresión, causa raíz en el diseño y un test que reproduce el bug primero.</p></div>
+      <div class="card"><div class="ico">🩺</div><h3>Diagnóstico</h3><p>Comprueba Copilot, agent mode, herramientas de extensión y políticas de empresa, y te dice qué pedir a TI.</p></div>
+      <div class="card"><div class="ico">↩️</div><h3>Seguro con tus archivos</h3><p>Todos los cambios pasan por el editor: respetan Ctrl+Z y nunca pisan un documento con cambios sin guardar.</p></div>
+      <div class="card"><div class="ico">📁</div><h3>Multi-root</h3><p>Cada carpeta del workspace con su propio <code>specs/</code>, agrupadas en el panel.</p></div>
+      <div class="card"><div class="ico">🎨</div><h3>SDD Studio Dark</h3><p>Un tema morado inspirado en Kiro. Se ofrece una vez; nunca se activa sin preguntarte.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="formato">
+  <div class="wrap">
+    <div class="eyebrow">Formato</div>
+    <h2>Markdown legible, versionado con tu código</h2>
+    <p class="sub">Todo vive en <code>specs/&lt;feature&gt;/</code>. Sin bases de datos ni archivos de estado ocultos: el estado está en el front matter y en las casillas.</p>
+    <div class="two">
+      <div class="file"><div class="fn">specs/export-csv/requirements.md</div><pre><span class="mu">---
+status: approved
+approvedAt: 2026-10-01T10:00:00.000Z
+---</span>
+<span class="h">### Requisito 1: Exportar pedidos</span>
+<b>Historia:</b> Como admin, quiero exportar
+pedidos a CSV, para analizarlos.
+<span class="h">#### Criterios de aceptación</span>
+1. <span class="k">WHEN</span> el admin pulsa "Exportar"
+   <span class="k">THE SYSTEM SHALL</span> generar el CSV.
+2. <span class="k">IF</span> hay más de 50k filas
+   <span class="k">THEN THE SYSTEM SHALL</span> generarlo
+   en segundo plano y notificar.
+3. <span class="k">THE SYSTEM SHALL NOT</span> incluir
+   datos de tarjeta.</pre></div>
+      <div class="file"><div class="fn">specs/export-csv/tasks.md</div><pre><span class="h"># Plan de implementación — export-csv</span>
+
+<span class="x">- [x]</span> 1. Consulta de pedidos con filtros
+  - _Requisitos: 1.1_
+<span class="ip">- [-]</span> 2. Generación del CSV
+  <span class="x">- [x]</span> 2.1 Serializador sin datos de tarjeta
+    - _Requisitos: 1.3_
+  - [ ] 2.2 Trabajo en segundo plano
+    - _Requisitos: 1.2_
+- [ ]* 3. Métricas de uso
+
+<span class="mu">[ ] pendiente · [-] en curso · [x] hecha
+[ ]* opcional · _Requisitos_ = trazabilidad</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section id="instalar">
+  <div class="wrap">
+    <div class="eyebrow">Instalar</div>
+    <h2>Listo en dos minutos</h2>
+    <p class="sub">Se distribuye como un archivo <code>.vsix</code>. Necesitas GitHub Copilot con agent mode habilitado.</p>
+    <div class="install">
+      <ol class="steps">
+        <li><b>Consigue el .vsix</b><span>Desde los <a href="https://github.com/enriquecordero/sdd-studio/releases">Releases</a> del repo, o genéralo tú con <code>npm run package</code>.</span></li>
+        <li><b>Instálalo</b><span>Con el comando de la derecha o arrastrando el archivo a la vista de Extensiones.</span></li>
+        <li><b>Ejecuta "SDD Studio: Diagnóstico"</b><span>Comprueba Copilot y las políticas de tu organización.</span></li>
+        <li><b>Abre el panel ⚡ y crea tu primer spec</b><span>"+ Nuevo spec" → escribe tu idea en el chat → elige el tipo en la tarjeta. Copilot hace el resto, y tú apruebas.</span></li>
+      </ol>
+      <div>
+        <div class="term"><span class="cm"># instalar</span>
+<span class="pr">$ </span>code --install-extension sdd-studio-0.3.0.vsix
+
+<span class="cm"># o compilar desde el código</span>
+<span class="pr">$ </span>git clone https://github.com/enriquecordero/sdd-studio
+<span class="pr">$ </span>cd sdd-studio &amp;&amp; npm ci
+<span class="pr">$ </span>npm run package</div>
+        <ul class="req">
+          <li>VS Code 1.140 o superior</li>
+          <li>GitHub Copilot Chat con sesión iniciada y agent mode habilitado</li>
+          <li>Comandos de chat: <code>/spec-new</code>, <code>/spec-bugfix</code>, <code>/spec-quick</code>, <code>/spec-run</code>, <code>/spec-steering</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="powers">
+      <div>
+        <div class="eyebrow">Nuevo</div>
+        <h2 style="margin-bottom:10px">⚡ Powers</h2>
+        <p style="color:var(--mu);margin:0">Una galería de skills de la comunidad, adaptados para Copilot y presentados con infografías. Actívalos por repo con un clic, en el formato abierto Agent Plugins 1.0. <a href="powers/">Ver todos los Powers →</a></p>
+      </div>
+      <div class="chips"><!-- POWERS_TEASER --></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>⚡ SDD Studio · por <a href="https://github.com/enriquecordero">@enriquecordero</a></div>
+    <div>Inspirado en el flujo de specs de Kiro; proyecto independiente, sin afiliación con AWS ni Kiro. Tema basado en "Kiro Theme" (MIT).</div>
+  </div>
+</footer>
+
+</body>
+</html>

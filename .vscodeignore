@@ -13,3 +13,8 @@ vitest.config.ts
 package-lock.json
 .superpowers/**
 .gitignore
+scripts/**
+site/**
+_site/**
+powers/**
+media/icon.svg

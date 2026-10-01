@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "code-review",
+  "version": "1.0.0",
+  "description": "Revisión en dos ejes: estándares del repo y el spec o issue original.",
+  "author": { "name": "Matt Pocock", "url": "https://github.com/mattpocock" },
+  "license": "MIT",
+  "keywords": ["review", "pr", "quality"],
+  "repository": "https://github.com/mattpocock/skills",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/code-review.html"
+}

@@ -1,0 +1,16 @@
+{
+  "displayName": "Domain Modeling",
+  "icon": "🧭",
+  "category": "architecture",
+  "summary": "Un glosario del dominio y ADRs para que código, specs y equipo hablen igual.",
+  "triggers": ["\"¿cómo llamamos a…?\"", "\"escribe un ADR\"", "\"GLOSSARY.md\""],
+  "diagram": {
+    "kind": "split",
+    "columns": [
+      { "label": "GLOSARIO", "tone": "accent", "items": ["GLOSSARY.md", "Términos del negocio", "Sinónimos a evitar", "Relaciones"] },
+      { "label": "DECISIONES", "tone": "blue", "items": ["docs/adr/", "Contexto", "Decisión", "Consecuencias"] }
+    ]
+  },
+  "gets": ["Un lenguaje común", "Decisiones con su porqué", "Specs más precisos"],
+  "source": { "repo": "mattpocock/skills", "path": "skills/engineering/domain-modeling", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+}

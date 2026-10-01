@@ -1,0 +1,17 @@
+{
+  "displayName": "Prototype",
+  "icon": "🧪",
+  "category": "planning",
+  "summary": "Un prototipo desechable para responder una duda de diseño antes de comprometerte.",
+  "triggers": ["\"haz un prototipo\"", "\"¿cómo se sentiría…?\"", "\"probar la idea\""],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      { "label": "PREGUNTA", "tone": "accent", "edge": "lo mínimo" },
+      { "label": "PROTOTIPO", "tone": "blue", "edge": "probarlo" },
+      { "label": "RESPUESTA", "tone": "green", "edge": "se descarta código" }
+    ]
+  },
+  "gets": ["Respuestas antes de invertir", "Código de usar y tirar", "Decisiones de diseño informadas"],
+  "source": { "repo": "mattpocock/skills", "path": "skills/engineering/prototype", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+}

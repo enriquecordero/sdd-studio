@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "prototype",
+  "version": "1.0.0",
+  "description": "Prototipo desechable para responder una duda de diseño de lógica o UI.",
+  "author": { "name": "Matt Pocock", "url": "https://github.com/mattpocock" },
+  "license": "MIT",
+  "keywords": ["prototype", "design", "ui"],
+  "repository": "https://github.com/mattpocock/skills",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/prototype.html"
+}

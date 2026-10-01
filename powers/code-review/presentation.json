@@ -1,0 +1,16 @@
+{
+  "displayName": "Code Review",
+  "icon": "🔍",
+  "category": "testing",
+  "summary": "Revisión en dos ejes: los estándares del repo y lo que pedía el spec.",
+  "triggers": ["\"revisa este PR\"", "\"code review\"", "\"revisa desde main\""],
+  "diagram": {
+    "kind": "split",
+    "columns": [
+      { "label": "ESTÁNDARES", "tone": "blue", "items": ["Reglas del repo", "AGENTS.md y guías", "Convenciones"] },
+      { "label": "SPEC", "tone": "green", "items": ["Issue o spec original", "¿Hace lo pedido?", "¿Falta o sobra algo?"] }
+    ]
+  },
+  "gets": ["Hallazgos ordenados por eje", "Menos desvíos del spec", "PRs más limpios"],
+  "source": { "repo": "mattpocock/skills", "path": "skills/engineering/code-review", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+}

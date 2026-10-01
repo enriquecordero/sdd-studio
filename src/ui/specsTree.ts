@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { docFileName } from '../specs/phase';
 import { isLeaf, parseTasks, Task, TaskStatus } from '../specs/tasks';
+import { PowersService } from '../powers/powersService';
 import { SpecDocInfo, SpecSnapshot, SpecStore, SteeringDoc } from '../workspace/specStore';
 import { docIcon, docStatusLabel, phaseBar, specDescription } from './labels';
 
@@ -12,7 +13,8 @@ export type SpecsNode =
   | { type: 'task'; snap: SpecSnapshot; task: Task }
   | { type: 'section'; section: 'steering' | 'powers'; folder: vscode.WorkspaceFolder }
   | { type: 'steering'; doc: SteeringDoc }
-  | { type: 'info'; label: string; command?: vscode.Command };
+  | { type: 'info'; label: string; command?: vscode.Command }
+  | { type: 'power'; id: string; folder: vscode.WorkspaceFolder; label: string; description: string; contextValue: string };
 
 const TASK_ICONS: Record<TaskStatus, string> = { todo: 'circle-outline', in_progress: 'circle-filled', done: 'pass-filled' };
 
@@ -26,8 +28,14 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vs
   readonly onDidChangeTreeData = this.emitter.event;
   private readonly subscription: vscode.Disposable;
 
-  constructor(private readonly store: SpecStore) {
-    this.subscription = store.onDidChange(() => this.emitter.fire(undefined));
+  constructor(
+    private readonly store: SpecStore,
+    private readonly powers?: PowersService,
+  ) {
+    this.subscription = vscode.Disposable.from(
+      store.onDidChange(() => this.emitter.fire(undefined)),
+      ...(powers ? [powers.onDidChange(() => this.emitter.fire(undefined))] : []),
+    );
   }
 
   async getChildren(node?: SpecsNode): Promise<SpecsNode[]> {
@@ -106,6 +114,13 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vs
         item.command = { command: 'vscode.open', title: 'Abrir', arguments: [node.doc.uri] };
         return item;
       }
+      case 'power': {
+        const item = new vscode.TreeItem(node.label);
+        item.description = node.description;
+        item.contextValue = node.contextValue;
+        item.tooltip = `Power ${node.id}`;
+        return item;
+      }
       case 'info': {
         const item = new vscode.TreeItem(node.label);
         item.command = node.command;
@@ -135,7 +150,28 @@ export class SpecsTreeProvider implements vscode.TreeDataProvider<SpecsNode>, vs
   }
 
   private async sectionChildren(section: 'steering' | 'powers', folder: vscode.WorkspaceFolder): Promise<SpecsNode[]> {
-    if (section === 'powers') return [{ type: 'info', label: 'Llegan en la próxima versión' }];
+    if (section === 'powers') {
+      const items: SpecsNode[] = [
+        { type: 'info', label: 'Abrir galería…', command: { command: 'sddStudio.openPowers', title: 'Abrir galería' } },
+        { type: 'info', label: 'Buscar actualizaciones', command: { command: 'sddStudio.checkPowerUpdates', title: 'Buscar actualizaciones' } },
+      ];
+      if (!this.powers) return items;
+      try {
+        for (const a of await this.powers.active(folder)) {
+          items.push({
+            type: 'power',
+            id: a.id,
+            folder,
+            label: a.power ? `${a.power.presentation.icon} ${a.power.presentation.displayName}` : a.id,
+            description: `v${a.entry.version}${a.status === 'update' ? ' · actualización disponible' : ''}`,
+            contextValue: a.status === 'update' ? 'power-update' : 'power-active',
+          });
+        }
+      } catch (e) {
+        items.push({ type: 'info', label: `⚠️ ${e instanceof Error ? e.message : String(e)}` });
+      }
+      return items;
+    }
     const docs = await this.store.listSteering(folder);
     if (docs.length === 0) {
       return [{ type: 'info', label: 'Generar steering…', command: { command: 'sddStudio.generateSteering', title: 'Generar steering' } }];

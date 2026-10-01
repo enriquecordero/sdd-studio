@@ -1,0 +1,18 @@
+{
+  "displayName": "Verificación",
+  "icon": "✅",
+  "category": "testing",
+  "summary": "Nada está \"listo\" sin ejecutar la comprobación y leer su salida.",
+  "triggers": ["\"ya está\"", "\"funciona\"", "\"listo para el PR\"", "\"terminé\""],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      { "label": "¿LISTO?", "tone": "warn", "edge": "qué lo probaría" },
+      { "label": "EJECUTAR", "tone": "blue", "edge": "comando completo" },
+      { "label": "LEER SALIDA", "tone": "accent", "edge": "exit code y errores" },
+      { "label": "CONFIRMAR", "tone": "green", "edge": "con evidencia" }
+    ]
+  },
+  "gets": ["Evidencia, no promesas", "Menos \"funciona en mi máquina\"", "PRs que pasan CI a la primera"],
+  "source": { "repo": "obra/superpowers", "path": "skills/verification-before-completion", "commit": "8ca22dba9a94f28898bbce59f2537ff4d87c747d", "author": "Jesse Vincent", "license": "MIT" }
+}
