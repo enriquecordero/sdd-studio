@@ -340,11 +340,12 @@
     ]
   },
   "scripts": {
-    "build": "node esbuild.mjs",
+    "build:catalog": "tsx scripts/build-catalog.ts",
+    "build": "npm run build:catalog && node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "vscode:prepublish": "npm run build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src test",
+    "lint": "eslint src test scripts",
     "test:unit": "vitest run",
     "compile:tests": "tsc -p tsconfig.test.json",
     "test:integration": "npm run build && npm run compile:tests && vscode-test",
