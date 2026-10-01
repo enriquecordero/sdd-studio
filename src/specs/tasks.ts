@@ -21,6 +21,7 @@ export interface TaskWarning {
 const TASK_RE = /^(\s*)- \[([ xX-])\](\*)? (\d+(?:\.\d+)*)\.?\s+(.*)$/;
 const CHECKBOX_RE = /^\s*- \[[^\]]?\]/;
 const REQUIREMENTS_RE = /_(?:Requisitos|Requirements):\s*([^_]+)_/;
+const FENCE_RE = /^\s*(`{3,}|~{3,})/;
 const STATUS_FROM_MARK: Record<string, TaskStatus> = { ' ': 'todo', '-': 'in_progress', x: 'done', X: 'done' };
 const MARK_FROM_STATUS: Record<TaskStatus, string> = { todo: ' ', in_progress: '-', done: 'x' };
 
@@ -29,15 +30,38 @@ function splitKeepingEol(text: string): string[] {
   return text.split(/(\r?\n)/);
 }
 
+/** Última línea (índice) del front matter inicial, o -1 si no hay uno cerrado. */
+function leadingFrontMatterEnd(parts: string[]): number {
+  if (parts[0]?.trimEnd() !== '---') return -1;
+  for (let i = 2; i < parts.length; i += 2) {
+    if (parts[i].trimEnd() === '---') return i / 2;
+  }
+  return -1;
+}
+
 export function parseTasks(text: string): { tasks: Task[]; warnings: TaskWarning[] } {
   const parts = splitKeepingEol(text);
   const tasks: Task[] = [];
   const warnings: TaskWarning[] = [];
   const seen = new Set<string>();
+  const frontMatterEnd = leadingFrontMatterEnd(parts);
+  let fence: string | undefined;
 
   for (let i = 0; i < parts.length; i += 2) {
     const raw = parts[i];
     const line = i / 2;
+    if (line <= frontMatterEnd) continue;
+    const fenceMatch = FENCE_RE.exec(raw);
+    if (fence !== undefined) {
+      if (fenceMatch && fenceMatch[1][0] === fence[0] && fenceMatch[1].length >= fence.length && raw.trim() === fenceMatch[1]) {
+        fence = undefined;
+      }
+      continue;
+    }
+    if (fenceMatch) {
+      fence = fenceMatch[1];
+      continue;
+    }
     const match = TASK_RE.exec(raw);
     if (match) {
       const [, , mark, star, id, title] = match;
@@ -76,8 +100,12 @@ export function parseTasks(text: string): { tasks: Task[]; warnings: TaskWarning
   return { tasks, warnings };
 }
 
+/**
+ * Hoja ejecutable: una tarea sin subtareas obligatorias. Un padre cuyas subtareas son todas
+ * opcionales se ejecuta y se marca directamente (nunca se calcula a partir de sus hijas).
+ */
 export function isLeaf(task: Task, tasks: Task[]): boolean {
-  return !tasks.some((t) => t.parentId === task.id);
+  return !tasks.some((t) => t.parentId === task.id && !t.optional);
 }
 
 function parentStatus(children: TaskStatus[]): TaskStatus {

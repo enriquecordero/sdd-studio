@@ -48,6 +48,16 @@ describe('computeLenses', () => {
     ]);
   });
 
+  it('un padre obligatorio con solo subtareas opcionales se puede ejecutar (I1)', () => {
+    const text = ['- [x] 1. a', '- [ ] 2. Padre', '  - [ ]* 2.1 Tests opcionales'].join('\n');
+    const lenses = computeLenses({ ...base, kind: 'tasks', text, states: { requirements: ok, design: ok, tasks: ok } });
+    expect(lenses.slice(1)).toEqual([
+      { line: 0, title: '✓ completada' },
+      { line: 1, title: '▶ Ejecutar tarea', command: 'sddStudio.runTask', args: ['ws', 'pagos', '2'] },
+      { line: 2, title: '▶ Ejecutar tarea', command: 'sddStudio.runTask', args: ['ws', 'pagos', '2.1'] },
+    ]);
+  });
+
   it('documento aprobado: solo la barra', () => {
     const lenses = computeLenses({ ...base, kind: 'requirements', text: '# R', states: { requirements: ok } });
     expect(lenses).toHaveLength(1);
