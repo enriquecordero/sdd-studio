@@ -1,6 +1,6 @@
 ---
 name: poteto-mode
-description: An opinionated working mode — name the principles behind each decision, run an experiment instead of asking when the answer is observable, make the smallest change, and verify against the real artifact before calling it done. Invoke explicitly with /poteto-mode. En español: "modo poteto", "trabaja en modo poteto", "/poteto-mode".
+description: Invoke explicitly with /poteto-mode. An opinionated working mode — name the principles behind each decision, run an experiment instead of asking when the answer is observable, make the smallest change, and verify against the real artifact before calling it done. En español: escribe "/poteto-mode" para trabajar en modo poteto.
 disable-model-invocation: true
 ---
 

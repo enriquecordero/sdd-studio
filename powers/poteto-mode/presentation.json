@@ -3,7 +3,7 @@
   "icon": "🥔",
   "category": "modes",
   "summary": "Un modo de trabajo con criterio: menos código, experimentos antes que preguntas y verificación real.",
-  "triggers": ["/poteto-mode", "\"modo poteto\""],
+  "triggers": ["/poteto-mode", "\"/poteto-mode implementa…\""],
   "diagram": {
     "kind": "steps",
     "nodes": [
