@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "context7",
+  "version": "1.0.0",
+  "description": "Documentación vigente y por versión de librerías y frameworks (Context7), antes de escribir código.",
+  "author": {
+    "name": "SDD Studio",
+    "url": "https://github.com/enriquecordero/sdd-studio"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "docs",
+    "context7",
+    "libraries"
+  ],
+  "repository": "https://github.com/enriquecordero/sdd-studio",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/context7.html"
+}

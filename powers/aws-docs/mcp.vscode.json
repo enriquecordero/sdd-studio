@@ -1,0 +1,25 @@
+{
+  "prerequisites": [
+    "uv"
+  ],
+  "inputs": [],
+  "servers": {
+    "sdd-awsdocs": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-documentation-mcp-server@1.2.2"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR",
+        "AWS_DOCUMENTATION_PARTITION": "aws"
+      }
+    }
+  },
+  "approxTools": {
+    "sdd-awsdocs": 5
+  },
+  "beta": false,
+  "credentials": "Ninguna (no usa credenciales de AWS)",
+  "example": "Consulta la documentación de AWS sobre el tamaño máximo de un mensaje de SQS y ajusta el productor, citando la página."
+}

@@ -1,0 +1,16 @@
+{
+  "prerequisites": [],
+  "inputs": [],
+  "servers": {
+    "sdd-mslearn": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    }
+  },
+  "approxTools": {
+    "sdd-mslearn": 3
+  },
+  "beta": false,
+  "credentials": "Ninguna",
+  "example": "Busca en Microsoft Learn cómo dar acceso a Key Vault desde una Function con identidad administrada y escribe el Bicep, citando la doc."
+}

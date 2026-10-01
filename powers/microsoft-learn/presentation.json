@@ -1,0 +1,47 @@
+{
+  "displayName": "Microsoft Learn",
+  "icon": "🎓",
+  "category": "docs",
+  "summary": "Doc oficial de Microsoft (Azure, .NET, M365) y ejemplos de código, citados.",
+  "triggers": [
+    "\"según Microsoft Learn…\"",
+    "\"¿cómo se hace en Azure…?\"",
+    "\"doc oficial de .NET\""
+  ],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      {
+        "label": "PREGUNTA",
+        "tone": "accent",
+        "edge": "busca la doc vigente"
+      },
+      {
+        "label": "BUSCA DOC",
+        "tone": "blue",
+        "edge": "cita la fuente"
+      },
+      {
+        "label": "CITA",
+        "tone": "warn",
+        "edge": "escribe"
+      },
+      {
+        "label": "CÓDIGO",
+        "tone": "green"
+      }
+    ]
+  },
+  "gets": [
+    "Respuestas de la doc oficial",
+    "Ejemplos de código de Microsoft",
+    "El enlace a la fuente"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/microsoft-learn",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

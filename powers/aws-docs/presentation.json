@@ -1,0 +1,47 @@
+{
+  "displayName": "AWS Docs",
+  "icon": "📙",
+  "category": "docs",
+  "summary": "Busca y lee la documentación oficial de AWS y cita la página usada.",
+  "triggers": [
+    "\"según la doc de AWS…\"",
+    "\"límites de S3/SQS…\"",
+    "\"¿cómo se configura en AWS…?\""
+  ],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      {
+        "label": "PREGUNTA",
+        "tone": "accent",
+        "edge": "busca la doc vigente"
+      },
+      {
+        "label": "BUSCA DOC",
+        "tone": "blue",
+        "edge": "cita la fuente"
+      },
+      {
+        "label": "CITA",
+        "tone": "warn",
+        "edge": "escribe"
+      },
+      {
+        "label": "CÓDIGO",
+        "tone": "green"
+      }
+    ]
+  },
+  "gets": [
+    "Límites y opciones reales",
+    "Infraestructura según la doc",
+    "El enlace a la fuente"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/aws-docs",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

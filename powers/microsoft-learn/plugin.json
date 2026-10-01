@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "microsoft-learn",
+  "version": "1.0.0",
+  "description": "Documentación oficial de Microsoft (Azure, .NET, Microsoft 365…) desde Microsoft Learn, con citas.",
+  "author": {
+    "name": "SDD Studio",
+    "url": "https://github.com/enriquecordero/sdd-studio"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "docs",
+    "microsoft",
+    "azure",
+    "dotnet"
+  ],
+  "repository": "https://github.com/enriquecordero/sdd-studio",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/microsoft-learn.html"
+}
