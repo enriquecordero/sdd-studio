@@ -17,3 +17,14 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 - [ ] Generar steering crea los tres `.instructions.md` con `applyTo`.
 - [ ] Workspace no confiable: "Nuevo spec" y "Ejecutar tarea" desactivados.
 - [ ] `/spec-new`, `/spec-bugfix`, `/spec-run`, `/spec-steering` aparecen en el chat.
+
+## Powers (v0.3.0)
+- [ ] El icono de la barra lateral es el documento de Speccy y el Marketplace muestra el icono PNG.
+- [ ] Panel ⚡ → Powers → "Abrir galería…" abre la pestaña con Speccy, filtros y 10 tarjetas.
+- [ ] "Ver detalle" muestra el póster (chips, diagrama, beneficios, origen) y "← Volver" regresa.
+- [ ] "+ Activar en este repo" en TDD crea `.github/skills/tdd/` y `.github/powers.lock.json`; la tarjeta pasa a "✓ Activo".
+- [ ] Con TDD activo, pedir a Copilot "implementa X" hace que escriba el test primero (el skill se carga).
+- [ ] Editar a mano `.github/skills/tdd/SKILL.md` y forzar una actualización pregunta antes de sobrescribir.
+- [ ] "Desactivar" borra solo los archivos del Power.
+- [ ] "Buscar actualizaciones" sin red muestra un aviso y la galería sigue funcionando.
+- [ ] La página https://enriquecordero.github.io/sdd-studio/powers/ muestra las mismas tarjetas y cada detalle.

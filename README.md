@@ -21,6 +21,14 @@ Requisitos: VS Code ≥ la versión de `engines.vscode`, GitHub Copilot Chat con
 
 Steering del proyecto: **Generar steering** (crea `.github/instructions/{product,tech,structure}.instructions.md`).
 
+## Powers
+Skills de la comunidad adaptados para Copilot (TDD, Debugging sistemático, Verificación, Grill Me, Domain Modeling, Code Review, Codebase Design, Prototype, Research y Poteto Mode).
+
+- **Galería:** panel ⚡ → Powers → **Abrir galería…** → **+ Activar en este repo**. El skill se copia a `.github/skills/<id>/` y queda registrado en `.github/powers.lock.json`. Commitea `.github/` para compartirlo con tu equipo.
+- **Actualizaciones:** **Buscar actualizaciones** descarga el catálogo más reciente (opcional; sin red se usa el incluido).
+- **Catálogo web:** https://enriquecordero.github.io/sdd-studio/powers/
+- **Créditos:** cada Power conserva su licencia y autor en `powers/<id>/LICENSE` y `UPSTREAM.md`.
+
 ## Formato
 - Front matter de cada documento: `status: draft | approved`.
 - Tareas: `[ ]` pendiente, `[-]` en curso, `[x]` hecha, `[ ]*` opcional; `_Requisitos: 1.1, 2.3_` para trazabilidad.
