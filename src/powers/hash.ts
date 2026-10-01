@@ -11,3 +11,16 @@ export function powerHash(files: Record<string, string>): string {
   }
   return hash.digest('hex');
 }
+
+/** JSON con las claves de los objetos ordenadas, a cualquier profundidad: el mismo valor da siempre el mismo texto. */
+export function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (typeof value === 'object' && value !== null) {
+    const obj = value as Record<string, unknown>;
+    const keys = Object.keys(obj)
+      .filter((k) => obj[k] !== undefined)
+      .sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}

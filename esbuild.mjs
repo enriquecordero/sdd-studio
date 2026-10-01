@@ -8,6 +8,8 @@ const ctx = await esbuild.context({
   external: ['vscode'],
   format: 'cjs',
   platform: 'node',
+  // jsonc-parser: su build UMD hace require() dinámicos que esbuild no resuelve; el ESM sí.
+  mainFields: ['module', 'main'],
   target: 'node20',
   sourcemap: true,
 });
