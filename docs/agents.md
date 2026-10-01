@@ -15,7 +15,7 @@ Las reglas están reescritas en español y resumidas; cuando un procedimiento es
 | Detectar alcance excesivo y proponer partir en varios specs | Evita specs que mezclan subsistemas independientes | SP · brainstorming |
 | Los hechos los busca el agente en el repo; al usuario solo se le preguntan decisiones | Preguntas cortas y que solo el usuario puede contestar | MP · grilling |
 | Cada pregunta con su respuesta recomendada | Contestar es elegir, no redactar | MP · grilling |
-| Delegar con punteros (rutas de spec, steering, glosario), no copias | El subagente lee lo que necesita; el prompt no se infla | MP · implement-spec, handoff |
+| Delegar con punteros (rutas de spec, steering, glosario), no copias | El subagente lee lo que necesita; el prompt no se infla | MP · implement-spec |
 | Pedir al subagente un estado de retorno (HECHO / HECHO CON DUDAS / BLOQUEADO / FALTA CONTEXTO) y sus dudas | Se sabe si se puede avanzar o hay que resolver algo | SP · subagent-driven-development |
 | Quick Spec: autorrevisión obligatoria en cada fase | Compensa que nadie revise cada fase | SP · brainstorming, writing-plans (self-review) |
 | Cierre tipo handoff: qué se creó (por ruta), qué queda abierto, siguiente paso; sin duplicar contenido | Estado reanudable sin repetir los documentos | MP · handoff |
@@ -31,7 +31,7 @@ Las reglas están reescritas en español y resumidas; cuando un procedimiento es
 | Usar glosario y respetar ADRs si existen (Power `domain-modeling`) | Lenguaje de dominio consistente entre fases | MP · to-spec, domain-modeling |
 | Autorrevisión antes de escribir: placeholders/TBD, contradicciones, alcance, ambigüedad (elegir una lectura explícita) | Detecta fallos baratos antes de que lleguen al diseño | SP · brainstorming (spec self-review) |
 | Bugfix: reproducir y buscar la causa antes de fijar el comportamiento esperado (Power `systematic-debugging`) | Evita requisitos que codifican un síntoma | SP · systematic-debugging |
-| Modo subagente: no preguntar, devolver dudas abiertas; modo directo: una pregunta por mensaje con respuesta recomendada | Respeta quién puede preguntar en cada modo | SP · brainstorming; MP · grilling |
+| Modo subagente: no preguntar, devolver dudas abiertas; modo directo: una pregunta por mensaje con respuesta recomendada | Respeta quién puede preguntar en cada modo | Decisión de SDD Studio (riesgo 3 de la investigación: solo sdd-spec tiene `askQuestions`); modo directo: SP · brainstorming + MP · grilling |
 
 ## sdd-design
 
@@ -78,7 +78,7 @@ Las reglas están reescritas en español y resumidas; cuando un procedimiento es
 | Regla | Por qué | Fuente |
 |---|---|---|
 | Basado en evidencia del repo | Confianza no es evidencia | SP · verification-before-completion |
-| Comandos de build/test/lint verificados ejecutándolos o leyendo scripts (y decirlo si no se ejecutaron) | Comandos reales, no supuestos | SP · verification-before-completion |
+| Comandos de build/test/lint verificados leyendo `package.json`, scripts y CI (el agente no puede ejecutarlos y lo dice) | Comandos reales, no supuestos | SP · verification-before-completion |
 | Lo no deducible va como pregunta al final; una por mensaje si el usuario responde | Preguntas fáciles de contestar | SP · brainstorming |
 | Breve y accionable; sin duplicar lo que muestra el código | Es contexto que se carga en cada petición | MP · writing-for-agents |
 | Seguir los patrones existentes, sin proponer reestructuras | El steering describe, no rediseña | SP · brainstorming |

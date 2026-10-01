@@ -21,7 +21,7 @@ Usa `applyTo` con un glob más específico solo si la guía aplica a un tipo de 
 
 ## Reglas
 - **Basado en evidencia del repo**: manifiestos, scripts, configuración, CI y código. Nada inventado.
-- Comandos de build/test/lint: verifícalos ejecutándolos o leyendo `package.json`/scripts; si no pudiste ejecutarlos, dilo.
+- Comandos de build/test/lint: verifícalos leyendo `package.json`, scripts y la configuración de CI; no puedes ejecutarlos, así que di claramente que no se ejecutaron.
 - Lo que no se puede deducir va como pregunta al final de tu respuesta; si el usuario responde, sigue con una pregunta por mensaje.
 - Breve y accionable: es contexto que se carga en cada petición. No dupliques lo que el código ya muestra.
 - Describe los patrones existentes para que se sigan; no propongas reestructuras.
