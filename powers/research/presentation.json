@@ -1,0 +1,18 @@
+{
+  "displayName": "Research",
+  "icon": "📚",
+  "category": "research",
+  "summary": "Investiga con fuentes primarias y deja el resultado, con citas, en Markdown.",
+  "triggers": ["\"investiga…\"", "\"¿qué dice la doc de…?\"", "\"busca fuentes\""],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      { "label": "PREGUNTA", "tone": "accent", "edge": "fuentes primarias" },
+      { "label": "FUENTES", "tone": "blue", "edge": "citar" },
+      { "label": "NOTAS", "tone": "warn", "edge": "guardar" },
+      { "label": "MARKDOWN", "tone": "green" }
+    ]
+  },
+  "gets": ["Hechos con su fuente", "Un documento reutilizable", "Menos alucinaciones"],
+  "source": { "repo": "mattpocock/skills", "path": "skills/engineering/research", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+}

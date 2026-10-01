@@ -1,0 +1,18 @@
+{
+  "displayName": "Grill Me",
+  "icon": "🔥",
+  "category": "planning",
+  "summary": "Te interroga a fondo sobre tu plan, una pregunta a la vez, antes del spec.",
+  "triggers": ["\"revisa mi plan\"", "\"cuestiona esto\"", "\"grill me\""],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      { "label": "PLAN", "tone": "accent", "edge": "una pregunta" },
+      { "label": "PREGUNTA", "tone": "warn", "edge": "tu respuesta" },
+      { "label": "DECISIÓN", "tone": "blue", "edge": "siguiente rama" },
+      { "label": "PLAN SÓLIDO", "tone": "green" }
+    ]
+  },
+  "gets": ["Un plan sin huecos", "Decisiones explícitas", "Menos sorpresas al implementar"],
+  "source": { "repo": "mattpocock/skills", "path": "skills/productivity/grill-me", "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60", "author": "Matt Pocock", "license": "MIT" }
+}
