@@ -50,6 +50,82 @@ describe('tarjeta y póster', () => {
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
   });
+  it('escapa todos los campos de presentación en tarjeta, póster, galería y webview', () => {
+    const payload = '<img src=x onerror=alert(1)>';
+    const evilSplit = {
+      ...power('split-evil'),
+      presentation: presentation({
+        displayName: payload,
+        summary: payload,
+        triggers: [payload],
+        gets: [payload],
+        diagram: {
+          kind: 'split' as const,
+          columns: [
+            { label: payload, items: [payload, 'safe'] },
+            { label: 'safe', items: [payload] },
+          ],
+        },
+        source: {
+          repo: payload,
+          path: payload,
+          commit: payload,
+          author: payload,
+          license: payload,
+        },
+      }),
+    };
+    const evilSteps = {
+      ...power('steps-evil'),
+      presentation: presentation({
+        displayName: payload,
+        summary: payload,
+        triggers: [payload],
+        gets: [payload],
+        diagram: {
+          kind: 'steps' as const,
+          nodes: [
+            { label: payload, edge: payload },
+            { label: 'safe', edge: payload },
+            { label: payload },
+          ],
+        },
+        source: {
+          repo: payload,
+          path: payload,
+          commit: payload,
+          author: payload,
+          license: payload,
+        },
+      }),
+    };
+
+    const card1 = renderCard(evilSplit, { actions: true });
+    const card2 = renderCard(evilSteps, { actions: true });
+    const poster1 = renderPoster(evilSplit, { actions: false });
+    const poster2 = renderPoster(evilSteps, { actions: false });
+    const grid = renderGrid([evilSplit, evilSteps], { actions: true, statuses: { 'split-evil': 'active', 'steps-evil': 'available' } });
+    const webview = renderGalleryDocument({
+      views: [
+        { power: evilSplit, status: 'active' },
+        { power: evilSteps, status: 'available' },
+      ],
+      strict: false,
+      hasFolder: true,
+      nonce: 'test',
+      cspSource: 'vscode-resource:',
+    });
+
+    const allHtml = card1 + card2 + poster1 + poster2 + grid + webview;
+
+    // No unescaped dangerous HTML should appear
+    expect(allHtml).not.toContain('<img src=x');
+    expect(allHtml).not.toContain('<script>');
+
+    // All payloads should be escaped
+    const escapedPayload = '&lt;img src=x onerror=alert(1)&gt;';
+    expect(allHtml).toContain(escapedPayload);
+  });
   it('botón según el estado', () => {
     const p = power('alpha');
     expect(renderCard(p, { actions: true })).toContain('data-action="activate"');
