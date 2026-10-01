@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
-import { getApi, readWs, restoreFixture, wsUri } from './helpers';
+import { getApi, readWs, restoreFixture, writeWs, wsUri } from './helpers';
 
 describe('SpecService + herramientas', () => {
   beforeEach(restoreFixture);
@@ -30,6 +30,22 @@ describe('SpecService + herramientas', () => {
     assert.match(await tools.approvePhase({ spec: 'export-csv', doc: 'design' }), /^ERROR \(DOC_MISSING\)/);
     assert.match(await tools.approvePhase({ spec: 'export-csv', doc: 'requirements' }), /Aprobado/);
     assert.match(await readWs('specs/export-csv/requirements.md'), /status: approved\napprovedAt: \d{4}-/);
+  });
+
+  it('un archivo existente sin abrir se edita con WorkspaceEdit y se puede deshacer', async () => {
+    const { tools } = await getApi();
+    const rel = 'specs/undo-cerrado/requirements.md';
+    await writeWs(rel, '---\nstatus: draft\n---\n# Requisitos\n');
+    const uri = wsUri(rel);
+    assert.match(await tools.approvePhase({ spec: 'undo-cerrado', doc: 'requirements' }), /Aprobado/);
+    assert.match(await readWs(rel), /status: approved/);
+    const doc = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
+    assert.ok(doc, 'el documento se abrió para aplicar el WorkspaceEdit');
+    assert.strictEqual(doc.isDirty, false);
+    await vscode.window.showTextDocument(doc);
+    await vscode.commands.executeCommand('undo');
+    assert.match(doc.getText(), /status: draft/);
+    await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
   });
 
   it('setTaskStatus cambia la tarea y su padre', async () => {
