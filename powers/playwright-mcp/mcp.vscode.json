@@ -1,0 +1,24 @@
+{
+  "prerequisites": [
+    "node"
+  ],
+  "inputs": [],
+  "servers": {
+    "sdd-playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.83",
+        "--headless",
+        "--isolated"
+      ]
+    }
+  },
+  "approxTools": {
+    "sdd-playwright": 25
+  },
+  "beta": false,
+  "credentials": "Ninguna (navegador aislado, sin tu perfil)",
+  "example": "Arranca la app con npm run dev, abre http://localhost:5173, prueba el login con un usuario inválido y adjunta una captura del mensaje de error."
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "azure",
+  "version": "1.0.0",
+  "description": "Consulta tu suscripción de Azure con tu sesión de az login; solo lectura por defecto y modo Operar con aviso (beta).",
+  "author": {
+    "name": "SDD Studio",
+    "url": "https://github.com/enriquecordero/sdd-studio"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "azure",
+    "cloud"
+  ],
+  "repository": "https://github.com/enriquecordero/sdd-studio",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/azure.html"
+}

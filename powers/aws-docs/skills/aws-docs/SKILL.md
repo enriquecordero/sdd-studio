@@ -22,6 +22,7 @@ This Power adds the `sdd-awsdocs` MCP server (AWS Labs). It runs locally through
 - Docs first, code second. Limits and defaults change: never state one from memory without checking.
 - Quote only what you need.
 - This server only reads documentation. It cannot see the user's account; for that, the `aws` Power is needed.
+
 ## If the tools are not available
 
 If no `sdd-awsdocs` tools show up, or a call fails because the server is not running:

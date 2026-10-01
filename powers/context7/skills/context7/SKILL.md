@@ -22,6 +22,7 @@ This Power adds the `sdd-context7` MCP server (Context7, by Upstash). It returns
 - Docs first, code second. One focused lookup beats several vague ones.
 - Quote only the lines you need; do not paste whole pages.
 - If Context7 has no entry for the library, say so and fall back to the project's own code or the official site, marked as unverified.
+
 ## If the tools are not available
 
 If no `sdd-context7` tools show up, or a call fails because the server is not running:

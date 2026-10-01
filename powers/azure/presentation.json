@@ -1,0 +1,46 @@
+{
+  "displayName": "Azure",
+  "icon": "🔷",
+  "category": "cloud",
+  "summary": "Copilot consulta tus recursos de Azure con tu sesión de az login; solo lectura salvo que elijas Operar.",
+  "triggers": [
+    "\"lista mis recursos de Azure…\"",
+    "\"¿qué hay en el resource group…?\"",
+    "\"revisa el Key Vault…\""
+  ],
+  "diagram": {
+    "kind": "split",
+    "columns": [
+      {
+        "label": "LEE",
+        "tone": "green",
+        "items": [
+          "Lista recursos",
+          "Consulta configuración",
+          "Siempre disponible"
+        ]
+      },
+      {
+        "label": "OPERA",
+        "tone": "warn",
+        "items": [
+          "Crea, cambia o borra",
+          "Solo en modo Operar",
+          "Pide confirmación"
+        ]
+      }
+    ]
+  },
+  "gets": [
+    "Respuestas sobre tu suscripción",
+    "Solo lectura por defecto",
+    "Cambios solo con modo Operar"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/azure",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

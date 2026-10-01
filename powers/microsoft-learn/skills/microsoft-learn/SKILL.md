@@ -22,6 +22,7 @@ This Power adds the `sdd-mslearn` MCP server, Microsoft's remote server for Micr
 - Docs first, code second. Prefer the newest page when several versions exist, and say which version you followed.
 - Quote only what you need.
 - If the docs do not cover the question, say so instead of guessing.
+
 ## If the tools are not available
 
 If no `sdd-mslearn` tools show up, or a call fails because the server is not running:

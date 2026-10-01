@@ -1,0 +1,47 @@
+{
+  "displayName": "GitHub",
+  "icon": "🐙",
+  "category": "devcore",
+  "summary": "Lee issues, PRs, repos y Actions de GitHub para dar contexto a tus specs.",
+  "triggers": [
+    "\"lee el issue #…\"",
+    "\"resume el PR…\"",
+    "\"¿por qué falla el workflow?\""
+  ],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      {
+        "label": "ISSUE",
+        "tone": "accent",
+        "edge": "lee el contexto"
+      },
+      {
+        "label": "CONTEXTO",
+        "tone": "blue",
+        "edge": "requisitos"
+      },
+      {
+        "label": "SPEC",
+        "tone": "warn",
+        "edge": "implementa"
+      },
+      {
+        "label": "PR",
+        "tone": "green"
+      }
+    ]
+  },
+  "gets": [
+    "Specs que nacen del issue",
+    "Contexto de PRs y CI",
+    "Solo lectura salvo que elijas Operar"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/github-mcp",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

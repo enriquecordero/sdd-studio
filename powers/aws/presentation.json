@@ -1,0 +1,46 @@
+{
+  "displayName": "AWS",
+  "icon": "☁️",
+  "category": "cloud",
+  "summary": "Copilot consulta tus recursos de AWS con tu perfil; solo lectura salvo que elijas Operar.",
+  "triggers": [
+    "\"lista mis buckets…\"",
+    "\"¿qué hay desplegado en AWS?\"",
+    "\"revisa la config de…\""
+  ],
+  "diagram": {
+    "kind": "split",
+    "columns": [
+      {
+        "label": "LEE",
+        "tone": "green",
+        "items": [
+          "Lista recursos",
+          "Consulta configuración",
+          "Siempre disponible"
+        ]
+      },
+      {
+        "label": "OPERA",
+        "tone": "warn",
+        "items": [
+          "Crea, cambia o borra",
+          "Solo en modo Operar",
+          "Pide confirmación"
+        ]
+      }
+    ]
+  },
+  "gets": [
+    "Respuestas sobre tu cuenta real",
+    "Solo lectura por defecto",
+    "Cambios solo con modo Operar"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/aws",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

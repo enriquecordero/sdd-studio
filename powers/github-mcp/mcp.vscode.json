@@ -1,0 +1,31 @@
+{
+  "prerequisites": [],
+  "inputs": [],
+  "servers": {
+    "sdd-github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/readonly",
+      "headers": {
+        "X-MCP-Toolsets": "repos,issues,pull_requests,actions"
+      }
+    }
+  },
+  "approxTools": {
+    "sdd-github": 60
+  },
+  "beta": false,
+  "credentials": "OAuth de VS Code con tu cuenta de GitHub",
+  "example": "Lee el issue #42 de este repo con sus comentarios y crea un spec a partir de él con sdd-spec.",
+  "operate": {
+    "servers": {
+      "sdd-github": {
+        "type": "http",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": {
+          "X-MCP-Toolsets": "repos,issues,pull_requests,actions"
+        }
+      }
+    },
+    "warning": "Copilot podrá crear y comentar issues y pull requests, y lanzar workflows, con tu cuenta de GitHub. Revisa cada llamada antes de aprobarla."
+  }
+}
