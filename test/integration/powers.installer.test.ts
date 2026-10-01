@@ -107,4 +107,28 @@ describe('PowerInstaller', () => {
     assert.strictEqual(await codeOf(installer.update(ws(), v2, async () => true)), 'NOT_INSTALLED');
     assert.strictEqual(await codeOf(installer.deactivate(ws(), 'alpha')), 'NOT_INSTALLED');
   });
+
+  it('activate hace rollback si falla escribir el lockfile', async () => {
+    let fail = true;
+    class Flaky extends PowerInstaller {
+      protected async writeLock(...args: Parameters<PowerInstaller['writeLock']>): Promise<void> {
+        if (fail) throw new Error('boom');
+        return super.writeLock(...args);
+      }
+    }
+    const flaky = new Flaky();
+    await assert.rejects(flaky.activate(ws(), v1), /boom/);
+    assert.strictEqual(await exists('.github/skills/alpha'), false);
+    fail = false;
+    await flaky.activate(ws(), v1);
+    assert.strictEqual(await exists('.github/skills/alpha/SKILL.md'), true);
+  });
+
+  it('update rechaza un cambio de skillName', async () => {
+    await installer.activate(ws(), v1);
+    const renamed = { ...v2, skillName: 'beta' };
+    assert.strictEqual(await codeOf(installer.update(ws(), renamed, async () => true)), 'UNSAFE_PATH');
+    assert.strictEqual(await exists('.github/skills/beta'), false);
+    assert.match(await readWs('.github/skills/alpha/SKILL.md'), /v1/);
+  });
 });

@@ -72,8 +72,15 @@ export class PowerInstaller {
         `Ya existe un skill "${power.skillName}" que no instaló SDD Studio (.github/skills/${power.skillName}/). Renómbralo o bórralo para activar este Power.`,
       );
     }
-    await this.writeFiles(folder, power);
-    await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now)));
+    try {
+      await this.writeFiles(folder, power);
+      await this.writeLock(folder, withEntry(lock, power.id, this.entryFor(power, now)));
+    } catch (e) {
+      const dir = this.skillDir(folder, power.skillName);
+      for (const rel of Object.keys(power.files)) await this.deleteIfExists(under(dir, rel));
+      await this.pruneEmptyDirs(dir);
+      throw e;
+    }
   }
 
   async update(
@@ -87,6 +94,9 @@ export class PowerInstaller {
     const entry = lock.powers[power.id];
     if (!entry) throw new PowerError('NOT_INSTALLED', `El Power "${power.id}" no está activo en este repo.`);
     this.assertSafe(entry.skillName, entry.files);
+    if (entry.skillName !== power.skillName) {
+      throw new PowerError('UNSAFE_PATH', `El Power "${power.id}" cambió de nombre de skill; desactívalo y vuelve a activarlo.`);
+    }
     const dir = this.skillDir(folder, entry.skillName);
     const onDisk: Record<string, string> = {};
     let missing = false;
@@ -141,7 +151,7 @@ export class PowerInstaller {
     }
   }
 
-  private async writeLock(folder: vscode.WorkspaceFolder, lock: Lockfile): Promise<void> {
+  protected async writeLock(folder: vscode.WorkspaceFolder, lock: Lockfile): Promise<void> {
     await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(folder.uri, '.github'));
     await vscode.workspace.fs.writeFile(this.lockUri(folder), encoder.encode(serializeLock(lock)));
   }
