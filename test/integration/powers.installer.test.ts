@@ -106,7 +106,7 @@ describe('PowerInstaller', () => {
     assert.ok(JSON.parse(await readWs('.github/powers.lock.json')).powers.alpha);
   });
 
-  it('deactivate con un archivo faltante y confirm true: borra y quita la entrada', async () => {
+  it('deactivate con un archivo editado y confirm true: borra y quita la entrada', async () => {
     await installer.activate(ws(), v1);
     await writeWs('.github/skills/alpha/SKILL.md', 'editado');
     assert.strictEqual(await installer.deactivate(ws(), 'alpha', async () => true), 'deactivated');
