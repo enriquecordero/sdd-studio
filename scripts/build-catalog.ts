@@ -52,13 +52,14 @@ export function buildCatalog(powersDir: string, now: Date = new Date()): { catal
       errors.push(...problems);
       continue;
     }
+    const files = { ...input.skillFiles, LICENSE: readFileSync(join(powersDir, dirName, 'LICENSE'), 'utf8') };
     powers.push({
       id: dirName,
       version: (input.pluginJson as { version: string }).version,
       presentation: input.presentation as Presentation,
       skillName: dirName,
-      files: input.skillFiles,
-      sha256: powerHash(input.skillFiles),
+      files,
+      sha256: powerHash(files),
     });
   }
   const catalog: Catalog = { schemaVersion: 1, generatedAt: now.toISOString(), powers };

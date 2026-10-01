@@ -26,7 +26,8 @@ describe('buildCatalog', () => {
     const { catalog, errors } = buildCatalog(root, new Date('2026-10-01T00:00:00Z'));
     expect(errors).toEqual([]);
     expect(catalog.powers.map((p) => p.id)).toEqual(['alpha', 'beta']);
-    expect(Object.keys(catalog.powers[0].files).sort()).toEqual(['SKILL.md', 'references/more.md']);
+    expect(catalog.powers[0].files.LICENSE).toBe('MIT\n');
+    expect(Object.keys(catalog.powers[0].files).sort()).toEqual(['LICENSE', 'SKILL.md', 'references/more.md']);
     expect(catalog.powers[0].version).toBe('1.2.0');
     expect(catalog.generatedAt).toBe('2026-10-01T00:00:00.000Z');
     expect(validateCatalog(catalog).ok).toBe(true);
