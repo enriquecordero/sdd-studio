@@ -189,6 +189,27 @@
         "command": "sddStudio.generateSteering",
         "title": "Generar steering",
         "category": "SDD Studio"
+      },
+      {
+        "command": "sddStudio.runTask",
+        "title": "Ejecutar tarea",
+        "category": "SDD Studio",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "sddStudio.markTaskDone",
+        "title": "Marcar tarea hecha",
+        "category": "SDD Studio"
+      },
+      {
+        "command": "sddStudio.approveAndContinue",
+        "title": "Aprobar y continuar",
+        "category": "SDD Studio"
+      },
+      {
+        "command": "sddStudio.openRequirements",
+        "title": "Ver requisitos",
+        "category": "SDD Studio"
       }
     ],
     "menus": {
@@ -208,6 +229,24 @@
         {
           "command": "sddStudio.generateSteering",
           "when": "view == sddStudio.specs && viewItem == section-steering"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sddStudio.runTask",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.markTaskDone",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.approveAndContinue",
+          "when": "false"
+        },
+        {
+          "command": "sddStudio.openRequirements",
+          "when": "false"
         }
       ]
     }
