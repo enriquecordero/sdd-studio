@@ -1,0 +1,12 @@
+src/**
+test/**
+out/**
+docs/**
+examples/**
+node_modules/**
+.vscode-test/**
+.github/**
+*.mjs
+tsconfig*.json
+vitest.config.ts
+**/*.map

@@ -1,0 +1,77 @@
+{
+  "name": "sdd-studio",
+  "displayName": "SDD Studio",
+  "description": "Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.",
+  "version": "0.1.0",
+  "publisher": "enriqueacordero",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enriqueacordero/sdd-studio"
+  },
+  "engines": {
+    "vscode": "^1.140.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Themes"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "En workspaces no confiables no se pueden crear specs ni ejecutar tareas."
+    }
+  },
+  "contributes": {
+    "configuration": {
+      "title": "SDD Studio",
+      "properties": {
+        "sddStudio.specsFolder": {
+          "type": "string",
+          "default": "specs",
+          "description": "Carpeta (relativa a la raíz del workspace) donde viven los specs."
+        },
+        "sddStudio.language": {
+          "type": "string",
+          "enum": [
+            "es",
+            "en"
+          ],
+          "default": "es",
+          "description": "Idioma en que los agentes redactan los specs. Las palabras clave EARS siempre van en inglés."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "vscode:prepublish": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
+    "test:unit": "vitest run",
+    "compile:tests": "tsc -p tsconfig.test.json",
+    "test:integration": "npm run build && npm run compile:tests && vscode-test",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.6.3",
+    "@types/vscode": "1.138.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.11.0",
+    "mocha": "^12.0.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}
