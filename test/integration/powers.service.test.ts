@@ -64,7 +64,12 @@ describe('PowersService', () => {
     const [active] = await powers.active(ws());
     assert.deepStrictEqual([active.id, active.entry.version, active.status], ['alpha', '1.0.0', 'update']);
     assert.strictEqual(await powers.update('alpha', ws(), async () => true), 'updated');
-    await powers.deactivate('alpha', ws());
+    assert.strictEqual(
+      await powers.deactivate('alpha', ws(), async () => {
+        throw new Error('no debe pedir confirmación');
+      }),
+      'deactivated',
+    );
     assert.deepStrictEqual(await powers.active(ws()), []);
     assert.ok(changes >= 4);
     sub.dispose();

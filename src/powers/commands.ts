@@ -114,8 +114,22 @@ export function registerPowerCommands(deps: PowersDeps): vscode.Disposable {
     vscode.commands.registerCommand(
       'sddStudio.deactivatePower',
       withPower(async (id, folder) => {
-        await deps.powers.deactivate(id, folder);
-        void vscode.window.showInformationMessage(`SDD Studio: Power "${id}" desactivado.`);
+        let p: Awaited<ReturnType<typeof deps.powers.find>> | undefined;
+        try {
+          p = await deps.powers.find(id);
+        } catch {
+          p = undefined;
+        }
+        const name = p?.presentation.displayName ?? id;
+        const result = await deps.powers.deactivate(id, folder, async () => {
+          const pick = await vscode.window.showWarningMessage(
+            `"${name}" tiene cambios locales en .github/skills/${p?.skillName ?? id}/. ¿Desactivarlo y borrar esos cambios?`,
+            { modal: true },
+            'Borrar y desactivar',
+          );
+          return pick === 'Borrar y desactivar';
+        });
+        if (result === 'deactivated') void vscode.window.showInformationMessage(`SDD Studio: Power "${name}" desactivado.`);
       }),
     ),
   );

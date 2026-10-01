@@ -22,6 +22,10 @@ async function codeOf(p: Promise<unknown>): Promise<string | undefined> {
   }
 }
 
+const noConfirm = async (): Promise<boolean> => {
+  throw new Error('no debe pedir confirmación');
+};
+
 const v1 = power('alpha', { 'SKILL.md': '---\nname: alpha\ndescription: d\n---\nv1\n', 'references/a.md': 'A\n' }, '1.0.0');
 const v2 = power('alpha', { 'SKILL.md': '---\nname: alpha\ndescription: d\n---\nv2\n' }, '1.1.0');
 
@@ -84,16 +88,35 @@ describe('PowerInstaller', () => {
   it('deactivate borra solo lo suyo y quita la entrada', async () => {
     await installer.activate(ws(), v1);
     await writeWs('.github/skills/alpha/notas-mias.md', 'mías');
-    await installer.deactivate(ws(), 'alpha');
+    assert.strictEqual(await installer.deactivate(ws(), 'alpha', noConfirm), 'deactivated');
     assert.strictEqual(await exists('.github/skills/alpha/SKILL.md'), false);
     assert.strictEqual(await exists('.github/skills/alpha/references'), false);
     assert.strictEqual(await readWs('.github/skills/alpha/notas-mias.md'), 'mías');
     assert.deepStrictEqual(JSON.parse(await readWs('.github/powers.lock.json')).powers, {});
   });
 
+  it('deactivate con un archivo editado y confirm false: no toca nada', async () => {
+    await installer.activate(ws(), v1);
+    await writeWs('.github/skills/alpha/SKILL.md', 'editado');
+    let asked = 0;
+    const r = await installer.deactivate(ws(), 'alpha', async () => (asked++, false));
+    assert.deepStrictEqual([r, asked], ['cancelled', 1]);
+    assert.strictEqual(await readWs('.github/skills/alpha/SKILL.md'), 'editado');
+    assert.strictEqual(await readWs('.github/skills/alpha/references/a.md'), 'A\n');
+    assert.ok(JSON.parse(await readWs('.github/powers.lock.json')).powers.alpha);
+  });
+
+  it('deactivate con un archivo faltante y confirm true: borra y quita la entrada', async () => {
+    await installer.activate(ws(), v1);
+    await writeWs('.github/skills/alpha/SKILL.md', 'editado');
+    assert.strictEqual(await installer.deactivate(ws(), 'alpha', async () => true), 'deactivated');
+    assert.strictEqual(await exists('.github/skills/alpha'), false);
+    assert.deepStrictEqual(JSON.parse(await readWs('.github/powers.lock.json')).powers, {});
+  });
+
   it('deactivate borra la carpeta si queda vacía', async () => {
     await installer.activate(ws(), v1);
-    await installer.deactivate(ws(), 'alpha');
+    await installer.deactivate(ws(), 'alpha', noConfirm);
     assert.strictEqual(await exists('.github/skills/alpha'), false);
   });
 
@@ -105,7 +128,7 @@ describe('PowerInstaller', () => {
 
   it('update o deactivate de un Power no activo: NOT_INSTALLED', async () => {
     assert.strictEqual(await codeOf(installer.update(ws(), v2, async () => true)), 'NOT_INSTALLED');
-    assert.strictEqual(await codeOf(installer.deactivate(ws(), 'alpha')), 'NOT_INSTALLED');
+    assert.strictEqual(await codeOf(installer.deactivate(ws(), 'alpha', noConfirm)), 'NOT_INSTALLED');
   });
 
   it('activate hace rollback si falla escribir el lockfile', async () => {

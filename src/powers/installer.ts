@@ -115,15 +115,30 @@ export class PowerInstaller {
     return 'updated';
   }
 
-  async deactivate(folder: vscode.WorkspaceFolder, id: string): Promise<void> {
+  async deactivate(
+    folder: vscode.WorkspaceFolder,
+    id: string,
+    confirmDiscard: () => Promise<boolean>,
+  ): Promise<'deactivated' | 'cancelled'> {
     const lock = await this.readLock(folder);
     const entry = lock.powers[id];
     if (!entry) throw new PowerError('NOT_INSTALLED', `El Power "${id}" no está activo en este repo.`);
     this.assertSafe(entry.skillName, entry.files);
     const dir = this.skillDir(folder, entry.skillName);
+    const onDisk: Record<string, string> = {};
+    let missing = false;
+    for (const rel of entry.files) {
+      const text = await readText(under(dir, rel));
+      if (text === undefined) missing = true;
+      else onDisk[rel] = text;
+    }
+    if (missing || powerHash(onDisk) !== entry.sha256) {
+      if (!(await confirmDiscard())) return 'cancelled';
+    }
     for (const rel of entry.files) await this.deleteIfExists(under(dir, rel));
     await this.pruneEmptyDirs(dir);
     await this.writeLock(folder, withoutEntry(lock, id));
+    return 'deactivated';
   }
 
   private assertSafe(skillName: string, paths: string[]): void {

@@ -81,9 +81,10 @@ export class PowersService implements vscode.Disposable {
     return result;
   }
 
-  async deactivate(id: string, folder: vscode.WorkspaceFolder): Promise<void> {
-    await this.installer.deactivate(folder, id);
-    this.emitter.fire();
+  async deactivate(id: string, folder: vscode.WorkspaceFolder, confirmDiscard: () => Promise<boolean>): Promise<'deactivated' | 'cancelled'> {
+    const result = await this.installer.deactivate(folder, id, confirmDiscard);
+    if (result === 'deactivated') this.emitter.fire();
+    return result;
   }
 
   async refreshOnline(): Promise<RefreshResult> {
