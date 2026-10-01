@@ -1,0 +1,18 @@
+{
+  "displayName": "Poteto Mode",
+  "icon": "🥔",
+  "category": "modes",
+  "summary": "Un modo de trabajo con criterio: menos código, experimentos antes que preguntas y verificación real.",
+  "triggers": ["/poteto-mode", "\"modo poteto\""],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      { "label": "PRINCIPIOS", "tone": "accent", "edge": "experimentar" },
+      { "label": "EXPERIMENTO", "tone": "blue", "edge": "cambio mínimo" },
+      { "label": "CAMBIO", "tone": "warn", "edge": "verificar" },
+      { "label": "VERIFICADO", "tone": "green" }
+    ]
+  },
+  "gets": ["Decisiones con su porqué", "Cambios pequeños y verificados", "Menos idas y vueltas"],
+  "source": { "repo": "cursor/plugins", "path": "pstack/skills/poteto-mode", "commit": "2eb7ed4613cfc8f098dfe464a23680ea44d84c5e", "author": "Lauren Tan", "license": "MIT" }
+}

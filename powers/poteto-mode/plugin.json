@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "poteto-mode",
+  "version": "1.0.0",
+  "description": "Modo de trabajo con criterio: principios explícitos, experimentos antes que preguntas, cambio mínimo y verificación real.",
+  "author": { "name": "Lauren Tan", "url": "https://github.com/poteto" },
+  "license": "MIT",
+  "keywords": ["mode", "principles", "workflow"],
+  "repository": "https://github.com/cursor/plugins",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/poteto-mode.html"
+}
