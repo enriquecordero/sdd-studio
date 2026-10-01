@@ -28,6 +28,24 @@ describe('activationDetail', () => {
   });
 });
 
+describe('activationDetail en modo Operar', () => {
+  const spec = mcpSpec({
+    servers: { 'sdd-a': { type: 'stdio', command: 'npx', args: ['-y', 'a@1.0.0', '--read-only'] } },
+    operate: { servers: { 'sdd-a': { type: 'stdio', command: 'npx', args: ['-y', 'a@1.0.0'] } }, warning: 'w' },
+  });
+  it('muestra la línea de comando del modo y la cabecera de reescritura', () => {
+    const text = activationDetail(spec, [], { state: 'allowed' }, 'operate', 'rewrite');
+    expect(text).toContain('Se reescribirán en .vscode/mcp.json (modo Operar):');
+    expect(text).toContain('npx -y a@1.0.0');
+    expect(text).not.toContain('--read-only');
+  });
+  it('por defecto es Solo lectura y añade', () => {
+    const text = activationDetail(spec, [], { state: 'allowed' });
+    expect(text).toContain('Se añadirán a .vscode/mcp.json (modo Solo lectura):');
+    expect(text).toContain('--read-only');
+  });
+});
+
 describe('overwriteQuestion', () => {
   it('nombra el skill o mcp.json según el motivo', () => {
     expect(overwriteQuestion('SKILL_EDITED', 'AWS', 'aws', 'update')).toBe('"AWS" tiene cambios hechos a mano en .github/skills/aws/. ¿Sobrescribir esos cambios?');

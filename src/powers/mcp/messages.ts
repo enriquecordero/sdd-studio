@@ -1,11 +1,21 @@
 import type { OverwriteReason } from '../installer';
 import type { McpPolicyState } from './policy';
-import { Prerequisite, PREREQUISITES, McpSpec, serverCommandLine, serverKind } from './spec';
+import { Prerequisite, PREREQUISITES, McpSpec, serverCommandLine, serverKind, McpMode, MODE_LABELS, serversForMode } from './spec';
 
 /** Texto del modal de activación (spec §6.3, paso 4): servidores, código local, prerrequisitos que faltan y beta. */
-export function activationDetail(spec: McpSpec, missing: Prerequisite[], policy: McpPolicyState): string {
-  const lines = ['Se añadirán a .vscode/mcp.json (modo Solo lectura):'];
-  for (const [name, server] of Object.entries(spec.servers)) {
+export function activationDetail(
+  spec: McpSpec,
+  missing: Prerequisite[],
+  policy: McpPolicyState,
+  mode: McpMode = 'readOnly',
+  action: 'add' | 'rewrite' = 'add',
+): string {
+  const lines = [
+    action === 'add'
+      ? `Se añadirán a .vscode/mcp.json (modo ${MODE_LABELS[mode]}):`
+      : `Se reescribirán en .vscode/mcp.json (modo ${MODE_LABELS[mode]}):`,
+  ];
+  for (const [name, server] of Object.entries(serversForMode(spec, mode))) {
     lines.push(
       serverKind(server) === 'local'
         ? `• ${name}: LOCAL, ejecuta código en tu máquina: ${serverCommandLine(server)}`

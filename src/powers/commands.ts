@@ -66,10 +66,17 @@ async function confirmModal(question: string, button: string, detail?: string): 
   return (await vscode.window.showWarningMessage(question, { modal: true, detail }, button)) === button;
 }
 
-async function confirmMcpModal(question: string, button: string, spec: McpSpec, powers: PowersService): Promise<boolean> {
+async function confirmMcpModal(
+  question: string,
+  button: string,
+  spec: McpSpec,
+  powers: PowersService,
+  mode: McpMode = 'readOnly',
+  action: 'add' | 'rewrite' = 'add',
+): Promise<boolean> {
   const missing: Prerequisite[] = [];
   for (const req of spec.prerequisites) if (!(await findOnPath(PREREQUISITES[req].executable))) missing.push(req);
-  return confirmModal(question, button, activationDetail(spec, missing, powers.policy()));
+  return confirmModal(question, button, activationDetail(spec, missing, powers.policy(), mode, action));
 }
 
 async function checkUpdates(powers: PowersService): Promise<void> {
@@ -138,6 +145,7 @@ export function registerPowerCommands(deps: PowersDeps): vscode.Disposable {
       withPower(async (id, folder) => {
         if (!requireTrust()) return;
         const p = await deps.powers.find(id);
+        const mode = (await deps.powers.views(folder)).find((v) => v.power.id === id)?.mode ?? 'readOnly';
         const result = await deps.powers.update(
           id,
           folder,
@@ -148,6 +156,8 @@ export function registerPowerCommands(deps: PowersDeps): vscode.Disposable {
               'Actualizar',
               spec,
               deps.powers,
+              mode,
+              'rewrite',
             ),
         );
         if (result === 'updated') void vscode.window.showInformationMessage(`SDD Studio: "${p.presentation.displayName}" actualizado a v${p.version}.`);
