@@ -19,7 +19,7 @@ interface NewSpecArgs {
   description?: string;
 }
 
-function language(): Language {
+export function language(): Language {
   return vscode.workspace.getConfiguration('sddStudio').get<Language>('language', 'es');
 }
 

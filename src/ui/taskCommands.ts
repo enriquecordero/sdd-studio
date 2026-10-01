@@ -4,7 +4,7 @@ import { SpecError } from '../specs/errors';
 import { DocKind } from '../specs/phase';
 import { findRequirementLine } from '../specs/requirements';
 import { parseTasks } from '../specs/tasks';
-import { CommandDeps } from './specCommands';
+import { CommandDeps, language } from './specCommands';
 
 async function guarded(fn: () => Promise<void>): Promise<void> {
   try {
@@ -55,7 +55,7 @@ export function registerTaskCommands(deps: CommandDeps): vscode.Disposable {
   const approveAndContinue = (folder: string, spec: string, kind: DocKind) =>
     guarded(async () => {
       await deps.service.approvePhase({ folder, spec, doc: kind });
-      const next = nextPhasePrompt({ spec, folder: folderArg(deps, folder), approved: kind });
+      const next = nextPhasePrompt({ spec, folder: folderArg(deps, folder), approved: kind, language: language() });
       if (next) {
         await deps.getBridge().openAgent(next.agent, next.prompt);
       } else {

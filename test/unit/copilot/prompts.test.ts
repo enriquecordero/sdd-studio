@@ -39,11 +39,16 @@ describe('runTaskPrompt', () => {
 
 describe('nextPhasePrompt', () => {
   it('requisitos y bugfix → sdd-design; diseño → sdd-tasks; tareas → nada', () => {
-    expect(nextPhasePrompt({ spec: 's', approved: 'requirements' })?.agent).toBe('sdd-design');
-    expect(nextPhasePrompt({ spec: 's', approved: 'bugfix' })?.agent).toBe('sdd-design');
-    expect(nextPhasePrompt({ spec: 's', approved: 'design' })?.agent).toBe('sdd-tasks');
-    expect(nextPhasePrompt({ spec: 's', approved: 'tasks' })).toBeUndefined();
-    expect(nextPhasePrompt({ spec: 's', approved: 'design' })?.prompt).toContain('Ya aprobé design.md del spec "s"');
+    expect(nextPhasePrompt({ spec: 's', approved: 'requirements', language: 'es' })?.agent).toBe('sdd-design');
+    expect(nextPhasePrompt({ spec: 's', approved: 'bugfix', language: 'es' })?.agent).toBe('sdd-design');
+    expect(nextPhasePrompt({ spec: 's', approved: 'design', language: 'es' })?.agent).toBe('sdd-tasks');
+    expect(nextPhasePrompt({ spec: 's', approved: 'tasks', language: 'es' })).toBeUndefined();
+    expect(nextPhasePrompt({ spec: 's', approved: 'design', language: 'es' })?.prompt).toContain('Ya aprobé design.md del spec "s"');
+  });
+  it('añade la línea de idioma (M4)', () => {
+    expect(nextPhasePrompt({ spec: 's', approved: 'requirements', language: 'es' })?.prompt).toContain('Redacta en español');
+    expect(nextPhasePrompt({ spec: 's', approved: 'design', language: 'en' })?.prompt).toContain('Write the document in English');
+    expect(nextPhasePrompt({ spec: 's', approved: 'bugfix', language: 'en' })?.prompt).toContain('Write the document in English');
   });
 });
 

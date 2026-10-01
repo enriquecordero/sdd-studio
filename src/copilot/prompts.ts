@@ -41,18 +41,29 @@ export function runTaskPrompt(p: {
   ].join('\n');
 }
 
-export function nextPhasePrompt(p: { spec: string; folder?: string; approved: DocKind }): { agent: AgentName; prompt: string } | undefined {
+export function nextPhasePrompt(p: {
+  spec: string;
+  folder?: string;
+  approved: DocKind;
+  language: Language;
+}): { agent: AgentName; prompt: string } | undefined {
   const where = `spec="${p.spec}"${folderArg(p.folder)}`;
   if (p.approved === 'requirements' || p.approved === 'bugfix') {
     return {
       agent: 'sdd-design',
-      prompt: `Ya aprobé ${p.approved}.md del spec "${p.spec}". Redacta design.md con writeSpecDoc (${where}, doc="design").`,
+      prompt: [
+        `Ya aprobé ${p.approved}.md del spec "${p.spec}". Redacta design.md con writeSpecDoc (${where}, doc="design").`,
+        languageLine(p.language),
+      ].join('\n'),
     };
   }
   if (p.approved === 'design') {
     return {
       agent: 'sdd-tasks',
-      prompt: `Ya aprobé design.md del spec "${p.spec}". Redacta tasks.md con writeSpecDoc (${where}, doc="tasks").`,
+      prompt: [
+        `Ya aprobé design.md del spec "${p.spec}". Redacta tasks.md con writeSpecDoc (${where}, doc="tasks").`,
+        languageLine(p.language),
+      ].join('\n'),
     };
   }
   return undefined;
