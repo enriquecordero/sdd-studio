@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext): SddStudioApi {
     registerTools(tools),
     vscode.window.createTreeView('sddStudio.specs', { treeDataProvider: specsTree }),
     registerSpecCommands(deps),
-    registerDoctor(context),
+    registerDoctor(context, powers),
   );
 
   const lensProvider = new SpecLensProvider(store);
