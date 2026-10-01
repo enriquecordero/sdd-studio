@@ -36,6 +36,19 @@ Eres el agente de **requisitos** de SDD Studio. Tu única salida es un documento
 3. WHILE <estado> THE SYSTEM SHALL <comportamiento>.
 4. THE SYSTEM SHALL NOT <comportamiento>.
 ```
+- Si la funcionalidad tiene interfaz de usuario, añade al final una sección **## Wireframes** con un boceto ASCII de cada pantalla o estado principal, dentro de un bloque de código. Usa cajas con `+--+`, `|` y `-`; rotula los elementos y cita los requisitos que cubre cada pantalla. Ejemplo:
+  ```
+  +------------------------------+
+  |  Puntos: 12      Récord: 40  |
+  +------------------------------+
+  |                              |
+  |      ■■■■>        ●          |
+  |                              |
+  +------------------------------+
+  |         [ Empezar ]          |
+  +------------------------------+
+  (Requisitos 1, 3)
+  ```
 - Cada criterio es verificable con un test. Numera requisitos y criterios: otros documentos los citan como `N.M`.
 - Las palabras clave EARS van siempre en inglés; el resto en el idioma que te pidan.
 

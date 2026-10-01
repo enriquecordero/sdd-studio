@@ -26,6 +26,27 @@ describe('manifiesto', () => {
     }
   });
 
+  it('si un handoff pide approvePhase o setTaskStatus, el agente destino tiene esa herramienta', () => {
+    const toolsOf = (name: string) =>
+      frontMatterFields(readFileSync(join(root, 'agents', `${name}.agent.md`), 'utf8')).get('tools')!;
+    for (const name of AGENTS) {
+      const text = readFileSync(join(root, 'agents', `${name}.agent.md`), 'utf8');
+      for (const m of text.matchAll(/^\s+agent: (\S+)\n\s+prompt: "([^"]*)"/gm)) {
+        for (const tool of ['approvePhase', 'setTaskStatus']) {
+          if (m[2].includes(tool)) expect(toolsOf(m[1]), `${name} → ${m[1]} necesita ${tool}`).toContain(`'${tool}'`);
+        }
+      }
+    }
+  });
+
+  it('requisitos y diseño piden diagramas ASCII / wireframes', () => {
+    const req = readFileSync(join(root, 'agents', 'sdd-requirements.agent.md'), 'utf8');
+    const design = readFileSync(join(root, 'agents', 'sdd-design.agent.md'), 'utf8');
+    expect(req).toMatch(/## Wireframes/);
+    expect(design).toMatch(/diagrama ASCII de arquitectura/);
+    expect(design).toMatch(/diagrama ASCII de flujo/);
+  });
+
   it('los agentes de fase no tienen la herramienta de edición genérica', () => {
     for (const name of ['sdd-requirements', 'sdd-design', 'sdd-tasks']) {
       const tools = frontMatterFields(readFileSync(join(root, 'agents', `${name}.agent.md`), 'utf8')).get('tools')!;
