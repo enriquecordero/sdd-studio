@@ -2,7 +2,7 @@
   "name": "sdd-studio",
   "displayName": "SDD Studio",
   "description": "Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "enriqueacordero",
   "private": true,
   "license": "MIT",
