@@ -268,6 +268,59 @@ describe('PowerInstaller con MCP', () => {
     assert.deepStrictEqual((await mcpJson()).servers['sdd-x'], v2spec.servers['sdd-x']);
   });
 
+  describe('update pide confirmar el MCP si añade servidores o cambia su URL', () => {
+    const files = ['.vscode/mcp.json', '.github/powers.lock.json', '.github/skills/gainer/SKILL.md'];
+    const snapshot = () => Promise.all(files.map(async (f) => ((await exists(f)) ? readWs(f) : undefined)));
+    const http = (url: string) => ({ type: 'http' as const, url });
+    const remoteSpec = (servers: Record<string, ReturnType<typeof http>>) =>
+      mcpSpec({ prerequisites: [], inputs: [], servers, approxTools: Object.fromEntries(Object.keys(servers).map((n) => [n, 1])), operate: undefined });
+    const v2files = { 'SKILL.md': '---\nname: gainer\ndescription: d\n---\nv2\n' };
+
+    async function cancelThenAccept(v2: ReturnType<typeof mcpPower>): Promise<void> {
+      const before = await snapshot();
+      const asked: unknown[] = [];
+      const r = await installer.update(ws(), v2, never, new Date(), async (mcp) => (asked.push(mcp), false));
+      assert.deepStrictEqual([r, asked], ['cancelled', [v2.mcp]]);
+      assert.deepStrictEqual(await snapshot(), before);
+      assert.strictEqual(await installer.update(ws(), v2, never, new Date(), yes), 'updated');
+      for (const [n, server] of Object.entries(v2.mcp!.servers)) assert.deepStrictEqual((await mcpJson()).servers[n], server);
+    }
+
+    it('un Power que gana MCP (servidor http nuevo)', async () => {
+      await installer.activate(ws(), power('gainer'));
+      await cancelThenAccept(mcpPower('gainer', remoteSpec({ 'sdd-g': http('https://g.dev/mcp') }), v2files, '1.1.0'));
+    });
+
+    it('un servidor http nuevo junto a uno que ya estaba', async () => {
+      await installer.activate(ws(), mcpPower('gainer', remoteSpec({ 'sdd-g': http('https://g.dev/mcp') })));
+      await cancelThenAccept(
+        mcpPower('gainer', remoteSpec({ 'sdd-g': http('https://g.dev/mcp'), 'sdd-h': http('https://h.dev/mcp') }), v2files, '1.1.0'),
+      );
+    });
+
+    it('un servidor http que cambia de URL', async () => {
+      await installer.activate(ws(), mcpPower('gainer', remoteSpec({ 'sdd-g': http('https://g.dev/mcp') })));
+      await cancelThenAccept(mcpPower('gainer', remoteSpec({ 'sdd-g': http('https://g2.dev/mcp') }), v2files, '1.1.0'));
+    });
+
+    it('un servidor http con la misma URL y otra cabecera no pide confirmar', async () => {
+      await installer.activate(ws(), mcpPower('gainer', remoteSpec({ 'sdd-g': http('https://g.dev/mcp') })));
+      const v2 = mcpPower(
+        'gainer',
+        mcpSpec({
+          prerequisites: [],
+          inputs: [],
+          servers: { 'sdd-g': { type: 'http', url: 'https://g.dev/mcp', headers: { 'X-Client': 'sdd' } } },
+          approxTools: { 'sdd-g': 1 },
+          operate: undefined,
+        }),
+        v2files,
+        '1.1.0',
+      );
+      assert.strictEqual(await installer.update(ws(), v2, never, new Date(), never), 'updated');
+    });
+  });
+
   it('desactivar con un comentario entre nuestra entrada y su coma deja un archivo válido con lo ajeno', async () => {
     await installer.activate(ws(), cloudy);
     const entry = JSON.stringify(cloudy.mcp!.servers['sdd-x']);

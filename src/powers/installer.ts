@@ -43,7 +43,10 @@ interface McpPlan {
   /** undefined = borrar `.vscode/mcp.json`. */
   after: string | undefined;
   lock: LockMcp | undefined;
-  /** Algún servidor stdio del destino ejecutaría una línea de comando distinta de la instalada (spec §10). */
+  /**
+   * Hay algo que el dev no confirmó (spec §10): un servidor del destino que no estaba instalado (también si el Power
+   * gana MCP) o uno cuya línea de comando (stdio) o URL (http) cambia respecto a la instalada.
+   */
   commandChanged: boolean;
 }
 
@@ -75,11 +78,16 @@ async function exists(uri: vscode.Uri): Promise<boolean> {
 
 const under = (base: vscode.Uri, rel: string) => vscode.Uri.joinPath(base, ...rel.split('/'));
 
-/** Línea de comando (command + args) de una entrada stdio, comparable sin ambigüedad; undefined si no es stdio. */
-function stdioCommand(server: unknown): string | undefined {
-  const s = server as { type?: unknown; command?: unknown; args?: unknown } | null;
-  if (typeof s !== 'object' || s === null || s.type !== 'stdio') return undefined;
-  return JSON.stringify([s.command, ...(Array.isArray(s.args) ? s.args : [])]);
+/**
+ * Lo que ejecuta o a dónde conecta una entrada, comparable sin ambigüedad: command + args si es stdio,
+ * la URL si es http (como serverCommandLine, pero sin confundir argumentos con espacios). undefined si no es ninguna.
+ */
+function commandLine(server: unknown): string | undefined {
+  const s = server as { type?: unknown; command?: unknown; args?: unknown; url?: unknown } | null;
+  if (typeof s !== 'object' || s === null) return undefined;
+  if (s.type === 'stdio') return JSON.stringify(['stdio', s.command, ...(Array.isArray(s.args) ? s.args : [])]);
+  if (s.type === 'http') return JSON.stringify(['http', s.url]);
+  return undefined;
 }
 
 /**
@@ -188,7 +196,7 @@ export class PowerInstaller {
     const target = power.mcp ? { spec: power.mcp, mode } : undefined;
     const plan = power.mcp || entry.mcp ? await this.planMcp(folder, lock, power.id, target, confirmOverwrite) : undefined;
     if (plan === 'cancelled') return 'cancelled';
-    // Un servidor stdio ejecuta código en la máquina del dev: si cambia lo que se ejecuta, se vuelve a confirmar.
+    // Un servidor nuevo, o uno que ejecuta otro código o conecta a otra URL, se vuelve a confirmar.
     if (power.mcp && plan?.commandChanged && !(await confirmMcp(power.mcp))) return 'cancelled';
     await this.writeFiles(folder, power);
     for (const rel of entry.files) if (!(rel in power.files)) await this.deleteIfExists(under(dir, rel));
@@ -300,9 +308,8 @@ export class PowerInstaller {
     }, this.mcpUri(folder));
     const commandChanged = Object.entries(targetServers).some(
       ([n, s]) =>
-        s.type === 'stdio' &&
-        current?.servers[n] !== entryHash(s) &&
-        (!(n in present) || stdioCommand(present[n]) !== stdioCommand(s)),
+        !currentNames.includes(n) ||
+        (current?.servers[n] !== entryHash(s) && (!(n in present) || commandLine(present[n]) !== commandLine(s))),
     );
     const createdFile = current?.createdFile ?? (before === undefined || mcpFileCreatedByUs(lock, id));
     const deleteFile = !target && createdFile && mcpEditOrFileInvalid(() => isEmptyMcpFile(after), this.mcpUri(folder));
