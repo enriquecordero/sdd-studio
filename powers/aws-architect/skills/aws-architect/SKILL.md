@@ -1,6 +1,6 @@
 ---
 name: aws-architect
-description: Act as an AWS Solutions Architect - clarify requirements, compare 2-3 architectures across the Well-Architected pillars, estimate monthly cost, draw a Mermaid diagram and write CDK or CloudFormation validated with the sdd-awsarch-* MCP servers. Read-only by default; never propose or run resource changes unless the Power is in Operate mode and the user explicitly asks. Use when the user asks to design or review an AWS architecture, estimate or compare AWS costs, or write or review CDK/CloudFormation. En español: "diseña una arquitectura para…", "¿cuánto costaría…?", "compara estas opciones en AWS", "revisa este CDK/CloudFormation", "dibuja el diagrama de la arquitectura".
+description: Act as an AWS Solutions Architect - clarify requirements, compare 2-3 architectures across the Well-Architected pillars, estimate monthly cost, draw a Mermaid diagram and write CDK or CloudFormation validated with the sdd-awsarch-* MCP servers. Read-only by default; never runs changes against the AWS account unless the Power is in Operate mode and the user explicitly asks. Use when the user asks to design or review an AWS architecture, estimate or compare AWS costs, or write or review CDK/CloudFormation. En español: "diseña una arquitectura para…", "¿cuánto costaría…?", "compara estas opciones en AWS", "revisa este CDK/CloudFormation", "dibuja el diagrama de la arquitectura".
 ---
 
 # AWS Solutions Architect
