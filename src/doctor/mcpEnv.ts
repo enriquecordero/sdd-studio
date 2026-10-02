@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { isIgnoredBy } from '../powers/mcp/gitignore';
 import { McpJsonError, readEntries } from '../powers/mcp/mcpJson';
 import { findOnPath } from '../powers/mcp/prereqs';
-import { Prerequisite, PREREQUISITES } from '../powers/mcp/spec';
+import { Prerequisite, PREREQUISITES, serverIdentity, serversForMode } from '../powers/mcp/spec';
 import type { ActivePower, PowersService } from '../powers/powersService';
 import type { ActiveMcpPower, DoctorEnv } from './checks';
 
@@ -37,17 +37,22 @@ export async function collectMcpEnv(powers: PowersService | undefined, folder: v
     fileInvalid = true;
     present = {};
   }
-  const activeMcp: ActiveMcpPower[] = withMcp.map((a) => ({
-    id: a.id,
-    displayName: a.power?.presentation.displayName ?? a.id,
-    mode: a.entry.mcp!.mode,
-    prerequisites: a.power?.mcp?.prerequisites ?? [],
-    servers: Object.keys(a.entry.mcp!.servers).map((name) => ({
-      name,
-      inFile: fileInvalid || name in present,
-      approxTools: a.power?.mcp?.approxTools[name] ?? 0,
-    })),
-  }));
+  const activeMcp: ActiveMcpPower[] = withMcp.map((a) => {
+    const defs = a.power?.mcp ? serversForMode(a.power.mcp, a.entry.mcp!.mode) : {};
+    return {
+      id: a.id,
+      displayName: a.power?.presentation.displayName ?? a.id,
+      mode: a.entry.mcp!.mode,
+      prerequisites: a.power?.mcp?.prerequisites ?? [],
+      servers: Object.keys(a.entry.mcp!.servers).map((name) => ({
+        name,
+        inFile: fileInvalid || name in present,
+        approxTools: a.power?.mcp?.approxTools[name] ?? 0,
+        // Sin definición en el catálogo no sabemos qué ejecuta: el nombre (único en mcp.json) no choca con nada.
+        identity: name in defs ? serverIdentity(defs[name]) : name,
+      })),
+    };
+  });
   const prereqs: Partial<Record<Prerequisite, boolean>> = {};
   for (const p of new Set(activeMcp.flatMap((a) => a.prerequisites))) prereqs[p] = await findOnPath(PREREQUISITES[p].executable);
   const gitignore = await readText(vscode.Uri.joinPath(folder.uri, '.gitignore'));

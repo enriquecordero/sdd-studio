@@ -81,7 +81,7 @@ describe('chequeos MCP (spec §7)', () => {
     displayName: 'AWS',
     mode: 'readOnly',
     prerequisites: ['uv', 'aws'],
-    servers: [{ name: 'sdd-aws', inFile: true, approxTools: 3 }],
+    servers: [{ name: 'sdd-aws', inFile: true, approxTools: 3, identity: 'uvx:awslabs.aws-api-mcp-server' }],
     ...over,
   });
   const withMcp: DoctorEnv = { ...healthy, activeMcp: [aws()], prereqs: { uv: true, aws: true } };
@@ -138,18 +138,42 @@ describe('chequeos MCP (spec §7)', () => {
     expect(find({ ...withMcp, mcpJsonIgnored: 'unknown' }, 'mcp-gitignored')[0].ok).toBe(true);
   });
   it('mcp-drift: warning con acción Reparar que reescribe en el modo del lock y la carpeta', () => {
-    const env = { ...withMcp, mcpFolder: 'app', activeMcp: [aws({ mode: 'operate', servers: [{ name: 'sdd-aws', inFile: false, approxTools: 3 }] })] };
+    const env = { ...withMcp, mcpFolder: 'app', activeMcp: [aws({ mode: 'operate', servers: [{ name: 'sdd-aws', inFile: false, approxTools: 3, identity: 'uvx:awslabs.aws-api-mcp-server' }] })] };
     const [c] = find(env, 'mcp-drift');
     expect(c).toMatchObject({ ok: false, severity: 'warning' });
     expect(c.message).toContain('sdd-aws');
     expect(c.fix).toEqual({ label: 'Reparar', command: 'sddStudio.setPowerMode', args: [{ id: 'aws', mode: 'operate', folder: 'app' }] });
   });
   it('mcp-tools: warning si la suma de approxTools pasa de 100', () => {
-    const many = (n: number) => aws({ servers: [{ name: 'sdd-aws', inFile: true, approxTools: n }] });
+    const many = (n: number) => aws({ servers: [{ name: 'sdd-aws', inFile: true, approxTools: n, identity: 'uvx:awslabs.aws-api-mcp-server' }] });
     expect(find({ ...withMcp, activeMcp: [many(100)] }, 'mcp-tools')[0].ok).toBe(true);
-    const [c] = find({ ...withMcp, activeMcp: [many(60), aws({ id: 'azure', servers: [{ name: 'sdd-azure', inFile: true, approxTools: 50 }] })] }, 'mcp-tools');
+    const [c] = find({ ...withMcp, activeMcp: [many(60), aws({ id: 'azure', servers: [{ name: 'sdd-azure', inFile: true, approxTools: 50, identity: 'npx:@azure/mcp' }] })] }, 'mcp-tools');
     expect(c).toMatchObject({ ok: false, severity: 'warning' });
     expect(c.message).toMatch(/~110 herramientas/);
     expect(c.message).toMatch(/128/);
+  });
+  it('mcp-duplicate: warning si dos Powers activos ejecutan el mismo servidor MCP', () => {
+    const architect = aws({
+      id: 'aws-architect',
+      displayName: 'AWS Solutions Architect',
+      servers: [
+        { name: 'sdd-awsarch-knowledge', inFile: true, approxTools: 5, identity: 'https://knowledge-mcp.global.api.aws' },
+        { name: 'sdd-awsarch-api', inFile: true, approxTools: 3, identity: 'uvx:awslabs.aws-api-mcp-server' },
+      ],
+    });
+    const results = find({ ...withMcp, activeMcp: [aws(), architect] }, 'mcp-duplicate');
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ ok: false, severity: 'warning' });
+    expect(results[0].message).toBe(
+      '"sdd-aws" (AWS) y "sdd-awsarch-api" (AWS Solutions Architect) ejecutan el mismo servidor MCP: Copilot verá herramientas repetidas.',
+    );
+    expect(results[0].action).toBe('Desactiva uno de los dos Powers o deselecciona sus herramientas en el selector de herramientas.');
+  });
+  it('mcp-duplicate: ok sin servidores repetidos entre Powers', () => {
+    const azure = aws({ id: 'azure', displayName: 'Azure', servers: [{ name: 'sdd-azure', inFile: true, approxTools: 50, identity: 'npx:@azure/mcp' }] });
+    const results = find({ ...withMcp, activeMcp: [aws(), azure] }, 'mcp-duplicate');
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ ok: true, severity: 'warning' });
+    expect(find(healthy, 'mcp-duplicate')).toEqual([]);
   });
 });

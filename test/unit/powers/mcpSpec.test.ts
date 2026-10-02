@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { serverCommandLine, serverKind, serversForMode, validateMcpSpec } from '../../../src/powers/mcp/spec';
+import { serverCommandLine, serverIdentity, serverKind, serversForMode, validateMcpSpec } from '../../../src/powers/mcp/spec';
 import { CATEGORIES, CATEGORY_LABELS } from '../../../src/powers/types';
 import { mcpSpec } from '../../support/powerFixtures';
 
@@ -97,6 +97,16 @@ describe('helpers de McpSpec', () => {
     expect(serverCommandLine(s)).toBe('uvx x-mcp-server@1.0.0');
     expect(serverKind(http('https://x.dev'))).toBe('remote');
     expect(serverCommandLine(http('https://x.dev'))).toBe('https://x.dev');
+  });
+  it('serverIdentity: URL, paquete npx/uvx sin versión o línea de comando', () => {
+    expect(serverIdentity(http('https://knowledge-mcp.global.api.aws'))).toBe('https://knowledge-mcp.global.api.aws');
+    expect(serverIdentity({ type: 'stdio', command: 'uvx', args: ['awslabs.aws-api-mcp-server@1.5.6'], env: { READ_OPERATIONS_ONLY: 'true' } })).toBe(
+      'uvx:awslabs.aws-api-mcp-server',
+    );
+    expect(serverIdentity({ type: 'stdio', command: 'npx', args: ['-y', '@azure/mcp@3.0.0-beta.48', 'server', 'start', '--read-only'] })).toBe('npx:@azure/mcp');
+    expect(serverIdentity({ type: 'stdio', command: 'npx', args: ['-y', '@playwright/mcp@0.0.83', '--headless'] })).toBe('npx:@playwright/mcp');
+    expect(serverIdentity({ type: 'stdio', command: 'docker', args: ['run', '-i', '--rm', 'img'] })).toBe('docker run -i --rm img');
+    expect(serverIdentity({ type: 'stdio', command: 'my-server' })).toBe('my-server');
   });
 });
 

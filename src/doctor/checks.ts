@@ -6,6 +6,8 @@ export interface ActiveMcpServer {
   /** true si la entrada sigue en `.vscode/mcp.json`. */
   inFile: boolean;
   approxTools: number;
+  /** Qué servidor ejecuta de verdad (`serverIdentity`), para detectar el mismo servidor en dos Powers. */
+  identity: string;
 }
 
 export interface ActiveMcpPower {
@@ -142,6 +144,29 @@ export function mcpChecks(env: DoctorEnv): CheckResult[] {
       fix: { label: 'Reparar', command: 'sddStudio.setPowerMode', args: [{ id: p.id, mode: p.mode, folder: env.mcpFolder }] },
     });
   }
+  const seen = new Map<string, { server: string; power: ActiveMcpPower }>();
+  const duplicates: CheckResult[] = [];
+  for (const p of env.activeMcp) {
+    for (const s of p.servers) {
+      const first = seen.get(s.identity);
+      if (!first) {
+        seen.set(s.identity, { server: s.name, power: p });
+      } else if (first.power.id !== p.id) {
+        duplicates.push({
+          id: 'mcp-duplicate',
+          ok: false,
+          severity: 'warning',
+          message: `"${first.server}" (${first.power.displayName}) y "${s.name}" (${p.displayName}) ejecutan el mismo servidor MCP: Copilot verá herramientas repetidas.`,
+          action: 'Desactiva uno de los dos Powers o deselecciona sus herramientas en el selector de herramientas.',
+        });
+      }
+    }
+  }
+  results.push(
+    ...(duplicates.length > 0
+      ? duplicates
+      : [{ id: 'mcp-duplicate', ok: true, severity: 'warning' as const, message: 'Ningún servidor MCP se repite entre Powers' }]),
+  );
   const tools = env.activeMcp.flatMap((p) => p.servers).reduce((sum, s) => sum + s.approxTools, 0);
   results.push({
     id: 'mcp-tools',

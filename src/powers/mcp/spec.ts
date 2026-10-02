@@ -70,6 +70,19 @@ export function serverCommandLine(server: McpServer): string {
   return server.type === 'stdio' ? [server.command, ...(server.args ?? [])].join(' ') : server.url;
 }
 
+/**
+ * Qué servidor MCP ejecuta realmente una entrada, sin importar su nombre, versión ni flags:
+ * la URL (http), `<command>:<paquete sin versión>` (npx/uvx) o la línea de comando (otros stdio).
+ */
+export function serverIdentity(server: McpServer): string {
+  if (server.type === 'http') return server.url;
+  if (server.command === 'npx' || server.command === 'uvx') {
+    const pkg = (server.args ?? []).find((a) => !a.startsWith('-'));
+    if (pkg !== undefined) return `${server.command}:${pkg.replace(PINNED_RE, '')}`;
+  }
+  return serverCommandLine(server);
+}
+
 function validateServer(name: string, s: unknown, where: string, errors: string[], usedInputs: Set<string>): void {
   const at = `${where}: servidor "${name}"`;
   if (!SERVER_NAME_RE.test(name)) errors.push(`${at}: el nombre debe cumplir ^sdd-[a-z0-9-]+$.`);
