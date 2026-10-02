@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PowerSourceInput, validatePowerSource } from '../../../src/powers/validateSource';
-import { presentation } from '../../support/powerFixtures';
+import { mcpSpec, presentation } from '../../support/powerFixtures';
 
 function input(over: Partial<PowerSourceInput> = {}): PowerSourceInput {
   return {
@@ -44,5 +44,20 @@ describe('validatePowerSource', () => {
   );
   it('exige exactamente una carpeta skills/<id>/', () => {
     expect(validatePowerSource(input({ skillDirs: ['alpha', 'beta'] })).join()).toMatch(/exactamente una carpeta/);
+  });
+  describe('mcp.vscode.json', () => {
+    const skillNaming = (names: string) => ({ 'SKILL.md': `---\nname: alpha\ndescription: Use when x.\n---\nUse ${names}.\n` });
+    it('acepta un spec válido cuyo servidor nombra el SKILL.md', () => {
+      expect(validatePowerSource(input({ mcpText: JSON.stringify(mcpSpec()), skillFiles: skillNaming('sdd-x') }))).toEqual([]);
+    });
+    it('JSON roto o spec inválido', () => {
+      expect(validatePowerSource(input({ mcpText: '{ roto', skillFiles: skillNaming('sdd-x') })).join()).toMatch(/mcp.vscode.json no es JSON válido/);
+      expect(validatePowerSource(input({ mcpText: JSON.stringify(mcpSpec({ approxTools: {} })), skillFiles: skillNaming('sdd-x') })).join()).toMatch(
+        /alpha\/mcp.vscode.json: "approxTools.sdd-x"/,
+      );
+    });
+    it('el SKILL.md debe nombrar cada servidor', () => {
+      expect(validatePowerSource(input({ mcpText: JSON.stringify(mcpSpec()) })).join()).toMatch(/SKILL.md debe nombrar el servidor "sdd-x"/);
+    });
   });
 });

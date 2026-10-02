@@ -1,4 +1,5 @@
 import type { PowerStatus } from '../lock';
+import type { McpMode } from '../mcp/spec';
 import { CATEGORIES, CATEGORY_LABELS, CatalogPower } from '../types';
 import { renderCard } from './card';
 import { escapeHtml as e } from './escape';
@@ -8,17 +9,30 @@ export function renderFilters(powers: CatalogPower[]): string {
   return (
     `<div class="pw-filters"><button class="pw-chip pw-on" data-filter="all">Todos (${powers.length})</button>` +
     cats.map((c) => `<button class="pw-chip" data-filter="${c}">${e(CATEGORY_LABELS[c])}</button>`).join('') +
+    (powers.some((p) => p.mcp) ? '<button class="pw-chip" data-filter="mcp">🔌 Con MCP</button>' : '') +
     `<input class="pw-search" type="search" placeholder="Buscar…" aria-label="Buscar Powers"></div>`
   );
 }
 
 export function renderGrid(
   powers: CatalogPower[],
-  opts: { statuses?: Record<string, PowerStatus>; actions: boolean; hrefFor?: (id: string) => string },
+  opts: {
+    statuses?: Record<string, PowerStatus>;
+    modes?: Record<string, McpMode>;
+    blocked?: string;
+    actions: boolean;
+    hrefFor?: (id: string) => string;
+  },
 ): string {
   if (powers.length === 0) return '<p class="pw-empty">No hay Powers en el catálogo.</p>';
   const card = (p: CatalogPower) =>
-    renderCard(p, { status: opts.statuses?.[p.id], actions: opts.actions, detailHref: opts.hrefFor?.(p.id) });
+    renderCard(p, {
+      status: opts.statuses?.[p.id],
+      mode: opts.modes?.[p.id],
+      blocked: opts.blocked,
+      actions: opts.actions,
+      detailHref: opts.hrefFor?.(p.id),
+    });
   const statuses = opts.statuses;
   if (!statuses) return `<div class="pw-grid">${powers.map(card).join('')}</div>`;
   const active = powers.filter((p) => statuses[p.id] === 'active' || statuses[p.id] === 'update');
@@ -37,12 +51,12 @@ export function renderTeaserChips(powers: CatalogPower[]): string {
     .join('');
 }
 
-/** Filtro por categoría y búsqueda; funciona igual en la web y en el webview. */
+/** Filtro por categoría, "Con MCP" y búsqueda; funciona igual en la web y en el webview. */
 export const FILTER_SCRIPT = `(function(){
   var state = { cat: 'all', q: '' };
   function apply(){
     document.querySelectorAll('.pw-card').forEach(function(c){
-      var okCat = state.cat === 'all' || c.getAttribute('data-category') === state.cat;
+      var okCat = state.cat === 'all' || (state.cat === 'mcp' ? c.getAttribute('data-mcp') === '1' : c.getAttribute('data-category') === state.cat);
       var okQ = !state.q || (c.getAttribute('data-search') || '').indexOf(state.q) >= 0;
       c.style.display = okCat && okQ ? '' : 'none';
     });

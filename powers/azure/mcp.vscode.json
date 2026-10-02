@@ -1,0 +1,41 @@
+{
+  "prerequisites": [
+    "node",
+    "az"
+  ],
+  "inputs": [],
+  "servers": {
+    "sdd-azure": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp@3.0.0-beta.48",
+        "server",
+        "start",
+        "--read-only"
+      ]
+    }
+  },
+  "approxTools": {
+    "sdd-azure": 50
+  },
+  "beta": true,
+  "credentials": "Tu sesión de Azure CLI (az login)",
+  "example": "Lista las cuentas de almacenamiento de mi suscripción y dime cuáles permiten acceso público a blobs.",
+  "operate": {
+    "servers": {
+      "sdd-azure": {
+        "type": "stdio",
+        "command": "npx",
+        "args": [
+          "-y",
+          "@azure/mcp@3.0.0-beta.48",
+          "server",
+          "start"
+        ]
+      }
+    },
+    "warning": "Copilot podrá crear, modificar o borrar recursos de Azure con tu sesión de az login. Revisa cada llamada antes de aprobarla."
+  }
+}

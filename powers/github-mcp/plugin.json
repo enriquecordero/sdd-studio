@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "github-mcp",
+  "version": "1.0.0",
+  "description": "Issues, pull requests, repos y Actions de GitHub como contexto para tus specs (solo lectura por defecto).",
+  "author": {
+    "name": "SDD Studio",
+    "url": "https://github.com/enriquecordero/sdd-studio"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "github",
+    "issues",
+    "pull-requests"
+  ],
+  "repository": "https://github.com/enriquecordero/sdd-studio",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/github-mcp.html"
+}

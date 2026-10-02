@@ -366,16 +366,229 @@ Diseña la interfaz del módulo de pagos del checkout para que sea testeable sin
 **Obtienes / Consejo:** funciona mejor con los demás Powers activos. Es un modo con muchas opiniones: úsalo cuando quieras ese estilo, no por defecto.
 </details>
 
+<details>
+<summary><b>🐙 GitHub</b> (🔌 MCP) — Issues, PRs, repos y Actions como contexto para tus specs</summary>
+
+**Cuándo usarlo:** cuando un spec nace de un issue, para resumir un PR o para entender por qué falla un workflow.
+
+**Cómo activarlo:** automático con "lee el issue #…", "resume el PR…", "¿por qué falla el workflow?". La primera vez, VS Code te pide iniciar sesión en GitHub.
+
+**Ejemplo:**
+```text
+Lee el issue #42 de este repo con sus comentarios y crea un spec a partir de él con sdd-spec.
+```
+
+**Qué hace el agente:**
+1. Lee el issue o el PR (y sus comentarios) con `sdd-github`, en solo lectura.
+2. Resume lo que leyó con enlaces y lo usa como fuente de los requisitos.
+3. Solo en modo **Operar** y si se lo pides, puede comentar y abrir issues y PRs, **fusionar PRs, escribir o borrar archivos y ramas y lanzar workflows** con tu cuenta; revisa cada llamada antes de aprobarla.
+
+**Obtienes / Consejo:** specs trazables al issue. Encaja en la fase de requisitos.
+</details>
+
+<details>
+<summary><b>🎭 Playwright</b> (🔌 MCP) — Prueba en un navegador real lo que implementas, con capturas</summary>
+
+**Cuándo usarlo:** después de implementar o arreglar algo visible en una app web, antes de darlo por hecho.
+
+**Cómo activarlo:** automático con "pruébalo en el navegador", "verifica la pantalla", "haz una captura". Necesita Node.js.
+
+**Ejemplo:**
+```text
+Arranca la app con npm run dev, abre http://localhost:5173, prueba el login con un usuario inválido y adjunta una captura del mensaje de error.
+```
+
+**Qué hace el agente:**
+1. Abre la URL local en un navegador headless y aislado (sin tus cookies).
+2. Recorre cada criterio de aceptación con clics y textos.
+3. Hace capturas en los estados clave y revisa los errores de consola.
+4. Informa criterio → qué hizo → qué vio, con las capturas como evidencia.
+
+**Obtienes / Consejo:** la evidencia que pide el Power `verification`. Úsalo en **▶ Ejecutar tarea** para tareas de UI.
+</details>
+
+<details>
+<summary><b>📖 Context7</b> (🔌 MCP) — Doc vigente de librerías y frameworks, por versión</summary>
+
+**Cuándo usarlo:** antes de escribir código contra una librería externa, sobre todo si nombras una versión.
+
+**Cómo activarlo:** automático con "¿cómo se usa…?", "según la doc de…", "usa context7".
+
+**Ejemplo:**
+```text
+Usa Context7 para ver cómo se define un middleware en Next.js 15 y escribe el de autenticación, citando la doc.
+```
+
+**Qué hace el agente:**
+1. Busca la librería en Context7 y elige la versión del proyecto.
+2. Pide la documentación del tema concreto.
+3. Escribe el código según la doc (si su memoria no coincide, gana la doc) y cita la fuente.
+
+**Obtienes / Consejo:** menos APIs inventadas. Anónimo, con límite de peticiones; úsalo en diseño e implementación.
+</details>
+
+<details>
+<summary><b>🎓 Microsoft Learn</b> (🔌 MCP) — Doc oficial de Microsoft y ejemplos de código</summary>
+
+**Cuándo usarlo:** antes de escribir código, Bicep o comandos para Azure, .NET o Microsoft 365.
+
+**Cómo activarlo:** automático con "según Microsoft Learn…", "¿cómo se hace en Azure…?", "doc oficial de .NET".
+
+**Ejemplo:**
+```text
+Busca en Microsoft Learn cómo dar acceso a Key Vault desde una Function con identidad administrada y escribe el Bicep, citando la doc.
+```
+
+**Qué hace el agente:**
+1. Busca en la documentación oficial y lee las páginas relevantes.
+2. Si hace falta código, parte de un ejemplo oficial.
+3. Termina con la lista de URLs de learn.microsoft.com que usó.
+
+**Obtienes / Consejo:** decisiones apoyadas en la doc oficial. Sin credenciales.
+</details>
+
+<details>
+<summary><b>📙 AWS Docs</b> (🔌 MCP) — Documentación oficial de AWS, con citas</summary>
+
+**Cuándo usarlo:** cuando una decisión depende de un límite, una cuota o un valor por defecto de AWS, o antes de escribir infraestructura.
+
+**Cómo activarlo:** automático con "según la documentación de AWS", "límites de S3", "¿cómo se configura en AWS…?". Necesita `uv`.
+
+**Ejemplo:**
+```text
+Consulta la documentación de AWS sobre el tamaño máximo de un mensaje de SQS y ajusta el productor, citando la página.
+```
+
+**Qué hace el agente:**
+1. Busca en la documentación de AWS y lee la página (o las secciones) que aplican.
+2. Escribe el código o la infraestructura según la doc.
+3. Cita las URLs de docs.aws.amazon.com que usó.
+
+**Obtienes / Consejo:** límites reales, no de memoria. No usa credenciales: para ver tu cuenta, el Power `aws`.
+</details>
+
+<details>
+<summary><b>☁️ AWS</b> (🔌 MCP) — Tu cuenta de AWS, en solo lectura por defecto</summary>
+
+**Cuándo usarlo:** para saber qué hay desplegado o cómo está configurado un recurso en tu cuenta.
+
+**Cómo activarlo:** automático con "lista mis buckets…", "¿qué hay desplegado en AWS?", "revisa la configuración de…". Necesita `uv` y un perfil de AWS; al iniciar el servidor, VS Code te pide perfil y región.
+
+**Ejemplo:**
+```text
+Lista mis buckets de S3 en us-east-1 y dime cuáles no tienen activado el bloqueo de acceso público.
+```
+
+**Qué hace el agente:**
+1. Ejecuta solo operaciones de lectura (`READ_OPERATIONS_ONLY`), sin acceso a tus archivos locales.
+2. Resume los resultados con ARNs y nombres para que los compruebes.
+3. Solo en modo **Operar** y si se lo pides, propone el cambio exacto y cada uno pide tu confirmación.
+
+**Obtienes / Consejo:** respuestas sobre tu cuenta real. Para "¿cómo funciona X?", mejor `aws-docs`.
+</details>
+
+<details>
+<summary><b>🏛️ AWS Solutions Architect</b> (🔌 MCP) — Un arquitecto de AWS: requisitos, opciones, costo, diagrama e IaC</summary>
+
+**Cuándo usarlo:** para diseñar o revisar una arquitectura en AWS, estimar cuánto costaría o escribir y validar CDK/CloudFormation.
+
+**Cómo activarlo:** automático con "diseña una arquitectura para…", "¿cuánto costaría…?", "revisa este CDK/CloudFormation". Necesita `uv` y un perfil de AWS (Knowledge no usa credenciales); al iniciar los servidores, VS Code te pide perfil y región.
+
+**Ejemplo:**
+```text
+Diseña una arquitectura para una API REST con 2.000 peticiones/min en us-east-1, compárala con una opción serverless, estima el costo mensual y dame el diagrama Mermaid y el CDK.
+```
+
+**Qué hace el agente:**
+1. Aclara requisitos (carga, SLA, datos, cumplimiento, presupuesto, región) y te propone una respuesta para cada decisión.
+2. Compara 2–3 arquitecturas según los seis pilares de Well-Architected y recomienda una, citando la doc de AWS (`sdd-awsarch-knowledge`).
+3. Estima el costo mensual con sus supuestos (`sdd-awsarch-pricing`), dibuja el diagrama en Mermaid y escribe el CDK o CloudFormation validado (`sdd-awsarch-iac`).
+4. Si se lo pides, revisa el pilar de seguridad de tu cuenta (`sdd-awsarch-wa`) o mira qué hay desplegado (`sdd-awsarch-api`), siempre en solo lectura salvo en modo **Operar**.
+
+**Obtienes / Consejo:** un diseño defendible con costo y código. Comparte perfil y región con el Power `aws`, así que VS Code los pide una sola vez; si activas los dos, el diagnóstico avisa (`mcp-duplicate`) porque ambos incluyen el servidor aws-api: basta con uno.
+</details>
+
+<details>
+<summary><b>🔷 Azure</b> (🔌 MCP, beta) — Tu suscripción de Azure, en solo lectura por defecto</summary>
+
+**Cuándo usarlo:** para saber qué hay en un resource group o cómo está configurado un recurso.
+
+**Cómo activarlo:** automático con "lista mis recursos de Azure…", "¿qué hay en el resource group…?", "revisa el Key Vault…". Necesita Node.js y `az login`.
+
+**Ejemplo:**
+```text
+Lista las cuentas de almacenamiento de mi suscripción y dime cuáles permiten acceso público a blobs.
+```
+
+**Qué hace el agente:**
+1. Arranca el servidor con `--read-only` y consulta el servicio que toca.
+2. Resume con nombres e ids de recurso; nunca muestra secretos.
+3. Solo en modo **Operar** y si se lo pides, hace un cambio cada vez, tras tu aprobación.
+
+**Obtienes / Consejo:** respuestas sobre tu suscripción real. Es beta (la etiqueta `latest` de npm es una beta): la versión está fijada.
+</details>
+
+
 #### 🔗 Combinaciones recomendadas con el flujo SDD
 
 | Fase | Powers | Para qué |
 |---|---|---|
 | Antes del spec | `grill-me`, `prototype`, `research` | Estresar el plan, probar una duda de lógica o UI y reunir hechos citados de fuentes primarias antes de escribir requisitos |
-| Requisitos | `domain-modeling` | Fijar el vocabulario en `GLOSSARY.md` para que los requisitos usen términos consistentes |
-| Diseño | `codebase-design`, `domain-modeling`, `research` | Interfaces y seams razonados, ADRs en `docs/adr/` y decisiones apoyadas en documentación oficial |
+| Requisitos | `domain-modeling`, `github-mcp` | Fijar el vocabulario en `GLOSSARY.md` para que los requisitos usen términos consistentes; con `github-mcp`, partir del issue real |
+| Diseño | `codebase-design`, `domain-modeling`, `research`, `context7`, `microsoft-learn`, `aws-docs`, `aws`, `aws-architect`, `azure` | Interfaces y seams razonados, ADRs en `docs/adr/` y decisiones apoyadas en documentación oficial; doc vigente de librerías y nubes y el estado real de tu cuenta (solo lectura) |
 | Tareas | `tdd`, `codebase-design` | Definir de antemano qué seams se prueban y la forma de la interfaz de cada tarea |
-| Implementación | `tdd`, `systematic-debugging`, `verification` | Test primero en **▶ Ejecutar tarea**, causa raíz si algo falla y evidencia antes de marcar hecha |
+| Implementación | `tdd`, `systematic-debugging`, `verification`, `playwright-mcp` | Test primero en **▶ Ejecutar tarea**, causa raíz si algo falla y evidencia antes de marcar hecha; capturas del navegador en tareas de UI |
 | Cierre y review | `verification`, `code-review` | Comprobar que todo pasa y revisar la rama contra estándares y spec |
+
+## 🔌 Powers con MCP
+
+Algunos Powers traen, además de su skill, **servidores MCP**: herramientas reales para Copilot (documentación vigente, un navegador, GitHub y tu nube). Igual que en Kiro, se activan **por repo** desde la galería: el skill va a `.github/skills/<id>/` y el servidor se añade a **`.vscode/mcp.json`**, así que tu equipo lo recibe por git. El skill le dice a Copilot cuándo y cómo usar cada servidor.
+
+| | Power | Servidor | Dónde corre | Prerrequisitos | Credenciales | Modo |
+|---|---|---|---|---|---|---|
+| 🐙 | [GitHub](https://enriquecordero.github.io/sdd-studio/powers/github-mcp.html) | `sdd-github` | Remoto (GitHub) | — | OAuth de VS Code | Solo lectura · Operar opcional |
+| 🎭 | [Playwright](https://enriquecordero.github.io/sdd-studio/powers/playwright-mcp.html) | `sdd-playwright` | **Local** (`npx`) | Node.js | — | — |
+| 📖 | [Context7](https://enriquecordero.github.io/sdd-studio/powers/context7.html) | `sdd-context7` | Remoto (Upstash) | — | — (anónimo) | — |
+| 🎓 | [Microsoft Learn](https://enriquecordero.github.io/sdd-studio/powers/microsoft-learn.html) | `sdd-mslearn` | Remoto (Microsoft) | — | — | — |
+| 📙 | [AWS Docs](https://enriquecordero.github.io/sdd-studio/powers/aws-docs.html) | `sdd-awsdocs` | **Local** (`uvx`) | uv | — | — |
+| ☁️ | [AWS](https://enriquecordero.github.io/sdd-studio/powers/aws.html) | `sdd-aws` | **Local** (`uvx`) | uv, AWS CLI | Tu perfil de AWS (VS Code pide perfil y región) | Solo lectura · Operar opcional |
+| 🏛️ | [AWS Solutions Architect](https://enriquecordero.github.io/sdd-studio/powers/aws-architect.html) | `sdd-awsarch-knowledge`, `sdd-awsarch-pricing`, `sdd-awsarch-iac`, `sdd-awsarch-wa`, `sdd-awsarch-api` | Remoto (AWS) + **Local** (`uvx`) | uv, AWS CLI | Tu perfil de AWS (el mismo perfil y región que AWS); Knowledge sin credenciales | Solo lectura · Operar opcional (solo `sdd-awsarch-api`) |
+| 🔷 | [Azure](https://enriquecordero.github.io/sdd-studio/powers/azure.html) (beta) | `sdd-azure` | **Local** (`npx`) | Node.js, Azure CLI | `az login` | Solo lectura · Operar opcional |
+
+**Cómo activarlos**
+1. Panel ⚡ → Powers → **Abrir galería…** → filtro **🔌 Con MCP** → **+ Activar en este repo**.
+2. Un aviso te enseña qué servidores se añaden, cuáles **ejecutan código en tu máquina** (y con qué comando), qué prerrequisitos te faltan y si es beta.
+3. VS Code te pedirá **confiar en el servidor e iniciarlo** (botón **Ver servidores MCP** en la notificación).
+4. Commitea `.github/` y `.vscode/mcp.json` para compartirlo con tu equipo.
+
+**Cómo cambiar a *Operar*** (GitHub, AWS, AWS Solutions Architect y Azure): en la galería, en el Power activo, pulsa **Operar**. Antes verás un aviso con lo que implica (por ejemplo: *"Copilot podrá crear, modificar o borrar recursos de AWS con tus credenciales. Cada cambio pedirá confirmación."*). El modo vive en `.vscode/mcp.json`, así que **es del repo y se revisa en el PR**. Vuelve a **Solo lectura** con el mismo selector.
+
+**Ejemplos de prompt** (en Copilot Chat, modo Agent, con el Power activo):
+
+| Power | Prompt |
+|---|---|
+| GitHub | `Lee el issue #42 de este repo con sus comentarios y crea un spec a partir de él con sdd-spec.` |
+| Playwright | `Arranca la app con npm run dev, abre http://localhost:5173, prueba el login con un usuario inválido y adjunta una captura del mensaje de error.` |
+| Context7 | `Usa Context7 para ver cómo se define un middleware en Next.js 15 y escribe el de autenticación, citando la doc.` |
+| Microsoft Learn | `Busca en Microsoft Learn cómo dar acceso a Key Vault desde una Function con identidad administrada y escribe el Bicep, citando la doc.` |
+| AWS Docs | `Consulta la documentación de AWS sobre el tamaño máximo de un mensaje de SQS y ajusta el productor, citando la página.` |
+| AWS | `Lista mis buckets de S3 en us-east-1 y dime cuáles no tienen activado el bloqueo de acceso público.` |
+| AWS Solutions Architect | `Diseña una arquitectura para una API REST con 2.000 peticiones/min en us-east-1, compárala con una opción serverless, estima el costo mensual y dame el diagrama Mermaid y el CDK.` |
+| Azure | `Lista las cuentas de almacenamiento de mi suscripción y dime cuáles permiten acceso público a blobs.` |
+
+**Si tu organización bloquea MCP**
+- La galería muestra **🔒 Bloqueado por tu organización** en los Powers con MCP y **SDD Studio: Diagnóstico** explica la causa: `chat.mcp.access = none`, solo servidores del registro de la organización o la política *ChatStrictPluginOnlyCustomization*.
+- Si los servidores aparecen **deshabilitados** en VS Code, pide a tu admin de GitHub que active la política **"MCP servers in Copilot"** ([documentación](https://docs.github.com/en/copilot/concepts/mcp-management)).
+- El diagnóstico también avisa si falta un prerrequisito, si el workspace no es de confianza, si `.vscode/mcp.json` está en `.gitignore`, si falta un servidor (botón **Reparar**), si dos Powers activos ejecutan el mismo servidor MCP (por ejemplo AWS y AWS Solutions Architect) o si los Powers activos suman más de ~100 herramientas (Copilot admite 128 por petición).
+
+> 🔐 **Seguridad**
+> - Los servidores **locales** (Playwright, AWS Docs, AWS, AWS Solutions Architect salvo Knowledge, Azure) ejecutan código en tu máquina; VS Code pide confianza antes de iniciarlos y solo arrancan en workspaces de confianza.
+> - Las versiones están **fijadas** (`@playwright/mcp@0.0.83`, `awslabs.aws-documentation-mcp-server@1.2.2`, `awslabs.aws-api-mcp-server@1.5.6`, `awslabs.aws-pricing-mcp-server@1.1.1`, `awslabs.aws-iac-mcp-server@1.0.26`, `awslabs.well-architected-security-mcp-server@0.2.0`, `@azure/mcp@3.0.0-beta.48`); nunca `@latest`.
+> - **Nunca se guarda un secreto en el repo:** GitHub usa el OAuth de VS Code; AWS pide perfil y región como `inputs`; Azure usa tu `az login`.
+
+> ⚠️ **Actualiza todo el equipo a v0.5.0.** Si alguien activa un Power MCP, el lock pasa a `schemaVersion 2` y v0.4.0 mostrará un error de formato (es a propósito: no sabría desactivar los servidores). La galería de v0.4.0 no ve los Powers MCP.
+
+> 🤖 Usa los Powers MCP desde el modo **Agent** normal de Copilot: los agentes `sdd-*` no los listan (detalle en [`docs/agents.md`](docs/agents.md)).
 
 ## 📦 Instalar
 
@@ -464,7 +677,7 @@ flowchart TB
     end
     AG -. usa .-> COP["GitHub Copilot (agent mode)"]
     COP -. llama .-> TOOLS
-    POW["powers/ (10 Powers)"] -->|build-catalog| CAT["dist/catalog.json"]
+    POW["powers/ (18 Powers)"] -->|build-catalog| CAT["dist/catalog.json"]
     CAT --> VSIX
     POW -->|build-site| SITE["GitHub Pages /powers"]
 ```
@@ -489,6 +702,7 @@ flowchart TB
 powers/<id>/
   plugin.json          Agent Plugins 1.0 (name, version, description, author, license)
   presentation.json    tarjeta y póster: icono, categoría, triggers, diagrama, beneficios, origen
+  mcp.vscode.json      opcional: servidores MCP (sdd-*), inputs, prerrequisitos, approxTools, modo Operar
   skills/<id>/SKILL.md el skill adaptado a Copilot (+ archivos de apoyo)
   LICENSE              licencia original
   UPSTREAM.md          repo, commit de origen y lista de cambios
@@ -503,6 +717,7 @@ Más documentación: [`docs/spec.md`](docs/spec.md) (spec del flujo SDD), [`docs
 ## 🙏 Créditos y licencia
 
 - **Powers:** [mattpocock/skills](https://github.com/mattpocock/skills) (Matt Pocock), [obra/superpowers](https://github.com/obra/superpowers) (Jesse Vincent) y [cursor/plugins · pstack](https://github.com/cursor/plugins) (Lauren Tan), todos MIT. Avisos completos en [`NOTICE`](NOTICE).
+- **Servidores MCP** (no se redistribuyen; solo su configuración): [GitHub MCP Server](https://github.com/github/github-mcp-server) (MIT), [Playwright MCP](https://github.com/microsoft/playwright-mcp) (Apache-2.0), [Context7](https://github.com/upstash/context7) (MIT), [Microsoft Learn MCP](https://github.com/MicrosoftDocs/mcp), [AWS MCP Servers](https://github.com/awslabs/mcp) (Apache-2.0) y [Azure MCP Server](https://github.com/microsoft/mcp) (MIT). Los skills de esos Powers son de SDD Studio (MIT).
 - **Reglas de los agentes:** inspiradas en [obra/superpowers](https://github.com/obra/superpowers) y [mattpocock/skills](https://github.com/mattpocock/skills) (MIT); detalle en [`docs/agents.md`](docs/agents.md).
 - **Tema SDD Studio Dark:** basado en [Kiro Theme](https://github.com/BioHazard786/kiro-theme-vscode) (MIT).
 - Proyecto independiente, inspirado en el flujo de specs de Kiro. Sin afiliación con AWS ni Kiro.

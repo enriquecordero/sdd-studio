@@ -1,0 +1,43 @@
+{
+  "displayName": "Playwright",
+  "icon": "🎭",
+  "category": "devcore",
+  "summary": "Copilot abre tu app en un navegador, la prueba y te deja capturas como evidencia.",
+  "triggers": [
+    "\"pruébalo en el navegador\"",
+    "\"verifica la pantalla…\"",
+    "\"haz una captura\""
+  ],
+  "diagram": {
+    "kind": "cycle",
+    "nodes": [
+      {
+        "label": "IMPLEMENTA",
+        "tone": "blue",
+        "edge": "abre el navegador"
+      },
+      {
+        "label": "ABRE",
+        "tone": "accent",
+        "edge": "comprueba y captura"
+      },
+      {
+        "label": "VERIFICA",
+        "tone": "green",
+        "edge": "si falla, corrige"
+      }
+    ]
+  },
+  "gets": [
+    "Comportamiento comprobado",
+    "Capturas como evidencia",
+    "Errores de consola a la vista"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/playwright-mcp",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

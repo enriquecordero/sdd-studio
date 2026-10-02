@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { validateCatalog } from '../src/powers/catalog';
-import { powerHash } from '../src/powers/hash';
+import { catalogPowerHash } from '../src/powers/hash';
+import { McpSpec } from '../src/powers/mcp/spec';
 import { Catalog, CatalogPower, Presentation } from '../src/powers/types';
 import { PowerSourceInput, validatePowerSource } from '../src/powers/validateSource';
 
@@ -39,6 +40,7 @@ export function readPowerSource(powersDir: string, dirName: string): PowerSource
     skillFiles: existsSync(skillDir) ? listFiles(skillDir) : {},
     hasLicense: existsSync(join(root, 'LICENSE')),
     hasUpstream: existsSync(join(root, 'UPSTREAM.md')),
+    mcpText: existsSync(join(root, 'mcp.vscode.json')) ? readFileSync(join(root, 'mcp.vscode.json'), 'utf8') : undefined,
   };
 }
 
@@ -53,16 +55,18 @@ export function buildCatalog(powersDir: string, now: Date = new Date()): { catal
       continue;
     }
     const files = { ...input.skillFiles, LICENSE: readFileSync(join(powersDir, dirName, 'LICENSE'), 'utf8') };
+    const mcp = input.mcpText === undefined ? undefined : (JSON.parse(input.mcpText) as McpSpec);
     powers.push({
       id: dirName,
       version: (input.pluginJson as { version: string }).version,
       presentation: input.presentation as Presentation,
       skillName: dirName,
       files,
-      sha256: powerHash(files),
+      sha256: catalogPowerHash(files, mcp),
+      ...(mcp ? { mcp } : {}),
     });
   }
-  const catalog: Catalog = { schemaVersion: 1, generatedAt: now.toISOString(), powers };
+  const catalog: Catalog = { schemaVersion: 2, generatedAt: now.toISOString(), powers };
   if (errors.length === 0) {
     const check = validateCatalog(catalog);
     if (!check.ok) errors.push(...check.errors);

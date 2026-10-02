@@ -1,0 +1,47 @@
+{
+  "displayName": "Context7",
+  "icon": "📖",
+  "category": "docs",
+  "summary": "Doc vigente de librerías y frameworks, por versión, antes de escribir código.",
+  "triggers": [
+    "\"¿cómo se usa…?\"",
+    "\"según la doc de…\"",
+    "\"usa context7\""
+  ],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      {
+        "label": "PREGUNTA",
+        "tone": "accent",
+        "edge": "busca la doc vigente"
+      },
+      {
+        "label": "BUSCA DOC",
+        "tone": "blue",
+        "edge": "cita la fuente"
+      },
+      {
+        "label": "CITA",
+        "tone": "warn",
+        "edge": "escribe"
+      },
+      {
+        "label": "CÓDIGO",
+        "tone": "green"
+      }
+    ]
+  },
+  "gets": [
+    "Código contra la API actual",
+    "La fuente citada",
+    "Menos APIs inventadas"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/context7",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

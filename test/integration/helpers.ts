@@ -25,7 +25,7 @@ export async function getApi(): Promise<SddStudioApi> {
   return ext.activate();
 }
 
-/** Restaura specs/ y .github/ desde pristine y espera a que los documentos abiertos se sincronicen con el disco. */
+/** Restaura specs/ y .github/ desde pristine, borra .vscode/ y espera a que los documentos abiertos se sincronicen con el disco. */
 export async function restoreFixture(): Promise<void> {
   for (const dir of ['specs', '.github']) {
     try {
@@ -34,6 +34,11 @@ export async function restoreFixture(): Promise<void> {
       // no existía
     }
     await vscode.workspace.fs.copy(vscode.Uri.file(path.join(PRISTINE, dir)), wsUri(dir), { overwrite: true });
+  }
+  try {
+    await vscode.workspace.fs.delete(wsUri('.vscode'), { recursive: true });
+  } catch {
+    // no existía
   }
   const deadline = Date.now() + 3000;
   while (Date.now() < deadline) {

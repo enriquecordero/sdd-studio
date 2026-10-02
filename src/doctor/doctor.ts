@@ -1,13 +1,29 @@
 import * as vscode from 'vscode';
+import { McpPolicyEnv, strictBlocksMcp } from '../powers/mcp/policy';
+import type { PowersService } from '../powers/powersService';
 import { CheckResult, DoctorEnv, runChecks } from './checks';
+import { collectMcpEnv } from './mcpEnv';
 
 /** Fijado por el spike (docs/spike-findings.md, fila 7). */
 const STRICT_SETTING = 'chat.customizations.strictPluginOnlyCustomization';
 const RAN_FOR_KEY = 'sddStudio.doctorRanFor';
 
+const strictValue = (): unknown => vscode.workspace.getConfiguration().get<unknown>(STRICT_SETTING, false);
+
+/** Política estricta activa para algún tipo de customización (aviso general de steering). */
 export function isStrictPluginOnly(): boolean {
-  const value = vscode.workspace.getConfiguration().get<unknown>(STRICT_SETTING, false);
+  const value = strictValue();
   return value === true || (Array.isArray(value) && value.length > 0);
+}
+
+/** Política estricta que afecta a `.vscode/mcp.json`: `true` o una lista que incluye `'mcp'`. */
+export function isStrictForMcp(): boolean {
+  return strictBlocksMcp(strictValue());
+}
+
+/** Lo que decide si los Powers con MCP se pueden activar (ver mcpPolicyState). */
+export function readMcpPolicyEnv(): McpPolicyEnv {
+  return { access: vscode.workspace.getConfiguration('chat').get<unknown>('mcp.access', 'all'), strictPluginOnly: isStrictForMcp() };
 }
 
 /**
@@ -25,7 +41,7 @@ async function githubSessionState(): Promise<boolean | 'unknown'> {
   }
 }
 
-async function collectEnv(context: vscode.ExtensionContext): Promise<DoctorEnv> {
+async function collectEnv(context: vscode.ExtensionContext, powers: PowersService | undefined): Promise<DoctorEnv> {
   const chat = vscode.workspace.getConfiguration('chat');
   const githubSignedIn = await githubSessionState();
   const engines: string = context.extension.packageJSON.engines.vscode;
@@ -37,6 +53,10 @@ async function collectEnv(context: vscode.ExtensionContext): Promise<DoctorEnv> 
     agentModeEnabled: chat.get<boolean>('agent.enabled', true),
     extensionToolsEnabled: chat.get<boolean>('extensionTools.enabled', true),
     strictPluginOnly: isStrictPluginOnly(),
+    strictForMcp: isStrictForMcp(),
+    mcpAccess: readMcpPolicyEnv().access,
+    workspaceTrusted: vscode.workspace.isTrusted,
+    ...(await collectMcpEnv(powers, vscode.workspace.workspaceFolders?.[0])),
   };
 }
 
@@ -44,7 +64,7 @@ function report(channel: vscode.OutputChannel, results: CheckResult[]): void {
   channel.clear();
   channel.appendLine(`SDD Studio — Diagnóstico (${new Date().toLocaleString()})`);
   for (const r of results) {
-    channel.appendLine(`${r.ok ? '✓' : r.severity === 'error' ? '✗' : '!'} ${r.message}`);
+    channel.appendLine(`${r.severity === 'info' ? 'ℹ' : r.ok ? '✓' : r.severity === 'error' ? '✗' : '!'} ${r.message}`);
     if (r.action) channel.appendLine(`    → ${r.action}`);
   }
   const problems = results.filter((r) => !r.ok);
@@ -52,17 +72,24 @@ function report(channel: vscode.OutputChannel, results: CheckResult[]): void {
     void vscode.window.showInformationMessage('SDD Studio: todo listo ✓');
     return;
   }
-  void vscode.window
-    .showWarningMessage(`SDD Studio: ${problems.length} problema(s) de configuración.`, 'Ver detalles')
-    .then((pick) => {
-      if (pick) channel.show();
-    });
+  const fixes = problems.flatMap((r) => (r.fix ? [r.fix] : []));
+  const buttons = fixes.length > 0 ? ['Ver detalles', 'Reparar'] : ['Ver detalles'];
+  void vscode.window.showWarningMessage(`SDD Studio: ${problems.length} problema(s) de configuración.`, ...buttons).then(async (pick) => {
+    if (pick === 'Ver detalles') channel.show();
+    if (pick !== 'Reparar') return;
+    // En secuencia: cada reparación lee y reescribe mcp.json y el lock, y en paralelo la última pisaría a las demás.
+    try {
+      for (const f of fixes) await vscode.commands.executeCommand(f.command, ...f.args);
+    } catch (e) {
+      void vscode.window.showErrorMessage(`SDD Studio: no se pudo reparar: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  });
 }
 
-export function registerDoctor(context: vscode.ExtensionContext): vscode.Disposable {
+export function registerDoctor(context: vscode.ExtensionContext, powers?: PowersService): vscode.Disposable {
   const channel = vscode.window.createOutputChannel('SDD Studio');
   const command = vscode.commands.registerCommand('sddStudio.doctor', async () => {
-    report(channel, runChecks(await collectEnv(context)));
+    report(channel, runChecks(await collectEnv(context, powers)));
   });
   return vscode.Disposable.from(channel, command);
 }

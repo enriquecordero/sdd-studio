@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "aws-architect",
+  "version": "1.0.0",
+  "description": "Un arquitecto de soluciones de AWS: aclara requisitos, compara arquitecturas, estima costos y entrega diagrama e IaC validada; solo lectura por defecto.",
+  "author": {
+    "name": "SDD Studio",
+    "url": "https://github.com/enriquecordero/sdd-studio"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "aws",
+    "cloud",
+    "architecture"
+  ],
+  "repository": "https://github.com/enriquecordero/sdd-studio",
+  "homepage": "https://enriquecordero.github.io/sdd-studio/powers/aws-architect.html"
+}

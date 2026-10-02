@@ -1,5 +1,17 @@
-export type PowerCategory = 'planning' | 'testing' | 'debugging' | 'architecture' | 'research' | 'modes';
-export const CATEGORIES: readonly PowerCategory[] = ['planning', 'testing', 'debugging', 'architecture', 'research', 'modes'];
+import type { McpSpec } from './mcp/spec';
+
+export type PowerCategory = 'planning' | 'testing' | 'debugging' | 'architecture' | 'research' | 'modes' | 'devcore' | 'docs' | 'cloud';
+export const CATEGORIES: readonly PowerCategory[] = [
+  'planning',
+  'testing',
+  'debugging',
+  'architecture',
+  'research',
+  'modes',
+  'devcore',
+  'docs',
+  'cloud',
+];
 export const CATEGORY_LABELS: Record<PowerCategory, string> = {
   planning: 'Planificación',
   testing: 'Testing',
@@ -7,6 +19,9 @@ export const CATEGORY_LABELS: Record<PowerCategory, string> = {
   architecture: 'Arquitectura',
   research: 'Investigación',
   modes: 'Modos',
+  devcore: 'Dev core',
+  docs: 'Documentación',
+  cloud: 'Cloud',
 };
 
 export type Tone = 'red' | 'green' | 'blue' | 'accent' | 'warn';
@@ -56,10 +71,15 @@ export interface CatalogPower {
   skillName: string;
   files: Record<string, string>;
   sha256: string;
+  /** Servidores MCP del Power (contenido validado de `mcp.vscode.json`). Solo en catálogos v2. */
+  mcp?: McpSpec;
 }
 
+/** 1: sin MCP (v0.3–v0.4). 2: admite Powers con `mcp` (v0.5+). */
+export type CatalogSchemaVersion = 1 | 2;
+
 export interface Catalog {
-  schemaVersion: 1;
+  schemaVersion: CatalogSchemaVersion;
   generatedAt: string;
   powers: CatalogPower[];
 }

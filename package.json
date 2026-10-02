@@ -2,7 +2,7 @@
   "name": "sdd-studio",
   "displayName": "SDD Studio",
   "description": "Spec-Driven Development estilo Kiro para VS Code, con GitHub Copilot.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "enriqueacordero",
   "private": true,
   "license": "MIT",
@@ -282,6 +282,12 @@
         "enablement": "isWorkspaceTrusted"
       },
       {
+        "command": "sddStudio.setPowerMode",
+        "title": "Cambiar modo de Power (MCP)",
+        "category": "SDD Studio",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
         "command": "sddStudio.deactivatePower",
         "title": "Desactivar Power",
         "category": "SDD Studio"
@@ -387,6 +393,10 @@
         {
           "command": "sddStudio.deactivatePower",
           "when": "false"
+        },
+        {
+          "command": "sddStudio.setPowerMode",
+          "when": "false"
         }
       ]
     },
@@ -428,5 +438,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
   }
 }

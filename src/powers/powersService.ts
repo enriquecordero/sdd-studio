@@ -1,14 +1,18 @@
 import * as vscode from 'vscode';
 import { CatalogSource, RefreshResult } from './catalogSource';
 import { CatalogFetcher, httpFetcher } from './fetcher';
-import { PowerError, PowerInstaller } from './installer';
+import { ConfirmMcp, ConfirmOverwrite, PowerError, PowerInstaller } from './installer';
 import { LockEntry, PowerStatus, powerStatus } from './lock';
+import type { McpPolicyState } from './mcp/policy';
+import type { McpMode } from './mcp/spec';
 import { Catalog, CatalogPower } from './types';
 
 export interface PowerView {
   power: CatalogPower;
   status: PowerStatus;
   installedVersion?: string;
+  /** Modo MCP activo (solo Powers con MCP activos). */
+  mode?: McpMode;
 }
 
 export interface ActivePower {
@@ -55,7 +59,7 @@ export class PowersService implements vscode.Disposable {
     const [catalog, lock] = await Promise.all([this.catalog(), this.installer.readLock(folder)]);
     return catalog.powers.map((power) => {
       const entry = lock.powers[power.id];
-      return { power, status: powerStatus(power, entry), installedVersion: entry?.version };
+      return { power, status: powerStatus(power, entry), installedVersion: entry?.version, mode: entry?.mcp?.mode };
     });
   }
 
@@ -70,18 +74,29 @@ export class PowersService implements vscode.Disposable {
       });
   }
 
-  async activate(id: string, folder: vscode.WorkspaceFolder): Promise<void> {
-    await this.installer.activate(folder, await this.find(id));
-    this.emitter.fire();
+  policy(): McpPolicyState {
+    return this.installer.policy();
   }
 
-  async update(id: string, folder: vscode.WorkspaceFolder, confirm: () => Promise<boolean>): Promise<'updated' | 'cancelled'> {
-    const result = await this.installer.update(folder, await this.find(id), confirm);
+  async activate(id: string, folder: vscode.WorkspaceFolder, confirmMcp?: ConfirmMcp): Promise<'activated' | 'cancelled'> {
+    const result = await this.installer.activate(folder, await this.find(id), undefined, confirmMcp);
+    if (result === 'activated') this.emitter.fire();
+    return result;
+  }
+
+  async setMode(id: string, folder: vscode.WorkspaceFolder, mode: McpMode, confirm: ConfirmOverwrite): Promise<'changed' | 'cancelled'> {
+    const result = await this.installer.setMode(folder, await this.find(id), mode, confirm);
+    if (result === 'changed') this.emitter.fire();
+    return result;
+  }
+
+  async update(id: string, folder: vscode.WorkspaceFolder, confirm: ConfirmOverwrite, confirmMcp?: ConfirmMcp): Promise<'updated' | 'cancelled'> {
+    const result = await this.installer.update(folder, await this.find(id), confirm, undefined, confirmMcp);
     if (result === 'updated') this.emitter.fire();
     return result;
   }
 
-  async deactivate(id: string, folder: vscode.WorkspaceFolder, confirmDiscard: () => Promise<boolean>): Promise<'deactivated' | 'cancelled'> {
+  async deactivate(id: string, folder: vscode.WorkspaceFolder, confirmDiscard: ConfirmOverwrite): Promise<'deactivated' | 'cancelled'> {
     const result = await this.installer.deactivate(folder, id, confirmDiscard);
     if (result === 'deactivated') this.emitter.fire();
     return result;

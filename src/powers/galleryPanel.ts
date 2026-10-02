@@ -53,7 +53,8 @@ export class GalleryController implements vscode.Disposable {
   }
 
   async render(): Promise<void> {
-    if (!this.panel) return;
+    const panel = this.panel;
+    if (!panel) return;
     const folder = this.store.folders()[0];
     const asAvailable = async (): Promise<PowerView[]> =>
       (await this.powers.catalog()).powers.map((power) => ({ power, status: 'available' as const }));
@@ -66,21 +67,32 @@ export class GalleryController implements vscode.Disposable {
       error = e.message;
       views = await asAvailable();
     }
+    if (this.panel !== panel) return;
+    const policy = this.powers.policy();
     this.lastHtml = renderGalleryDocument({
       views,
+      mcpBlocked: policy.state === 'blocked' ? policy.reason : undefined,
       strict: this.isStrict(),
       hasFolder: folder !== undefined && error === undefined,
       error,
       nonce: randomBytes(16).toString('hex'),
-      cspSource: this.panel.webview.cspSource,
+      cspSource: panel.webview.cspSource,
     });
-    this.panel.webview.html = this.lastHtml;
+    panel.webview.html = this.lastHtml;
   }
 
   async handleMessage(message: unknown): Promise<void> {
     if (typeof message !== 'object' || message === null) return;
-    const { type, id } = message as { type?: unknown; id?: unknown };
+    const { type, id, mode } = message as { type?: unknown; id?: unknown; mode?: unknown };
     if (typeof id !== 'string') return;
+    if (type === 'doctor') {
+      await vscode.commands.executeCommand('sddStudio.doctor');
+      return;
+    }
+    if (type === 'setMode') {
+      if (mode === 'readOnly' || mode === 'operate') await vscode.commands.executeCommand('sddStudio.setPowerMode', { id, mode });
+      return;
+    }
     if (type === 'openSource') {
       const power = await this.powers.find(id).catch(() => undefined);
       if (power) await vscode.env.openExternal(vscode.Uri.parse(sourceUrl(power.presentation.source)));

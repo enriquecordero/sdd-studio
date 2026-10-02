@@ -1,7 +1,8 @@
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { validateCatalog } from '../src/powers/catalog';
+import { catalogV1, validateCatalog } from '../src/powers/catalog';
 import { renderPoster } from '../src/powers/render/card';
+import { PREREQUISITES, serverKind } from '../src/powers/mcp/spec';
 import { escapeHtml as e } from '../src/powers/render/escape';
 import { FILTER_SCRIPT, renderFilters, renderGrid, renderTeaserChips } from '../src/powers/render/gallery';
 import { speccySvg } from '../src/powers/render/speccy';
@@ -18,6 +19,8 @@ const PAGE_CSS = `
 .pw-howto{max-width:760px;margin:24px auto 64px;color:#e8e3ef}
 .pw-howto a{color:#b080ff}
 .pw-howto code{background:#2a2530;padding:2px 6px;border-radius:5px}
+.pw-howto pre{background:#1a171e;border:1px solid #3a3342;border-radius:8px;padding:12px;overflow-x:auto}
+.pw-howto pre code{background:none;padding:0}
 `;
 
 function page(title: string, body: string, script = ''): string {
@@ -46,6 +49,33 @@ function howTo(p: CatalogPower): string {
   );
 }
 
+/** Sección "Cómo usarlo" de un Power con MCP: pasos, ejemplo de prompt y el bloque para copiar a mano en `.vscode/mcp.json`. */
+export function mcpHowTo(p: CatalogPower): string {
+  const mcp = p.mcp;
+  if (!mcp) return '';
+  const names = Object.keys(mcp.servers)
+    .map((n) => `<code>${e(n)}</code>`)
+    .join(', ');
+  const local = Object.values(mcp.servers).some((s) => serverKind(s) === 'local');
+  const steps = [
+    `Actívalo desde la galería de SDD Studio: añade ${names} a <code>.vscode/mcp.json</code> en modo <b>Solo lectura</b> y el skill a <code>.github/skills/${e(p.skillName)}/</code>.`,
+    ...(mcp.prerequisites.length > 0
+      ? [
+          `Necesitas en tu PATH: ${mcp.prerequisites.map((r) => `<a href="${e(PREREQUISITES[r].url)}">${e(PREREQUISITES[r].label)}</a>`).join(', ')}.`,
+        ]
+      : []),
+    `VS Code te pedirá confiar en el servidor e iniciarlo${local ? ' (se ejecuta en tu máquina)' : ''}. Credenciales: ${e(mcp.credentials)}.`,
+    ...(mcp.operate ? ['Para que Copilot pueda hacer cambios, cambia el modo a <b>Operar</b> en la galería; antes te avisa de lo que implica.'] : []),
+    `Pídeselo a Copilot en modo Agent, por ejemplo: <q>${e(mcp.example)}</q>`,
+  ];
+  const manual = JSON.stringify({ inputs: mcp.inputs, servers: mcp.servers }, null, 2);
+  return (
+    `<section class="pw-howto"><h2>Cómo usarlo</h2><ol>${steps.map((s) => `<li>${s}</li>`).join('')}</ol>` +
+    `<h3>Servidores a mano</h3><p>Sin SDD Studio, copia esto en <code>.vscode/mcp.json</code> (modo Solo lectura):</p>` +
+    `<pre><code>${e(manual)}</code></pre></section>`
+  );
+}
+
 export function buildSite(opts: { siteDir: string; outDir: string; catalog: Catalog; assets?: Record<string, string> }): void {
   const { siteDir, outDir, catalog } = opts;
   mkdirSync(outDir, { recursive: true });
@@ -66,9 +96,10 @@ export function buildSite(opts: { siteDir: string; outDir: string; catalog: Cata
     page('Powers — SDD Studio', hero + renderGrid(catalog.powers, { actions: false, hrefFor: (id) => `${id}.html` }), FILTER_SCRIPT),
   );
   for (const p of catalog.powers) {
-    writeFileSync(join(dir, `${p.id}.html`), page(`${p.presentation.displayName} — Powers de SDD Studio`, renderPoster(p, { actions: false }) + howTo(p)));
+    writeFileSync(join(dir, `${p.id}.html`), page(`${p.presentation.displayName} — Powers de SDD Studio`, renderPoster(p, { actions: false }) + mcpHowTo(p) + howTo(p)));
   }
-  writeFileSync(join(dir, 'catalog.json'), `${JSON.stringify(catalog)}\n`);
+  writeFileSync(join(dir, 'catalog-v2.json'), `${JSON.stringify(catalog)}\n`);
+  writeFileSync(join(dir, 'catalog.json'), `${JSON.stringify(catalogV1(catalog))}\n`);
 }
 
 function main(): void {

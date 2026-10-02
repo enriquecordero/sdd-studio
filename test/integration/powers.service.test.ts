@@ -13,9 +13,9 @@ describe('PowersService', () => {
     await powers.resetCatalog();
   });
 
-  it('carga el catálogo incluido (válido)', async () => {
+  it('carga el catálogo incluido (válido, v2)', async () => {
     const { powers } = await getApi();
-    assert.strictEqual((await powers.catalog()).schemaVersion, 1);
+    assert.strictEqual((await powers.catalog()).schemaVersion, 2);
   });
 
   it('refresh con catálogo válido y más nuevo lo usa', async () => {
@@ -42,7 +42,7 @@ describe('PowersService', () => {
       throw new Error('tiempo agotado (10 s)');
     });
     assert.deepStrictEqual(await powers.refreshOnline(), { kind: 'error', message: 'tiempo agotado (10 s)' });
-    assert.strictEqual((await powers.catalog()).schemaVersion, 1);
+    assert.strictEqual((await powers.catalog()).schemaVersion, 2);
   });
 
   it('catálogo más viejo: current', async () => {

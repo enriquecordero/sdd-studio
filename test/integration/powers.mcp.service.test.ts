@@ -1,0 +1,174 @@
+import * as assert from 'assert';
+import * as vscode from 'vscode';
+import type { McpStdioServer } from '../../src/powers/mcp/spec';
+import { catalog, mcpPower, mcpSpec, power } from '../support/powerFixtures';
+import { getApi, readWs, restoreFixture, ws, writeWs } from './helpers';
+
+const FUTURE = '2999-01-01T00:00:00.000Z';
+const cloudy = mcpPower('cloudy');
+const never = async (): Promise<boolean> => {
+  throw new Error('no debe pedir confirmación');
+};
+
+type WindowFn = (...args: never[]) => unknown;
+
+/** Sustituye métodos de vscode.window mientras corre `fn` y los restaura después. */
+async function withWindow(stubs: Record<string, WindowFn>, fn: () => Promise<void>): Promise<void> {
+  const w = vscode.window as unknown as Record<string, unknown>;
+  const saved = Object.fromEntries(Object.keys(stubs).map((k) => [k, w[k]]));
+  Object.assign(w, stubs);
+  try {
+    await fn();
+  } finally {
+    Object.assign(w, saved);
+  }
+}
+
+/** Activa `id` con el comando, aceptando el modal, y devuelve los mensajes informativos mostrados. */
+async function activateViaCommand(id: string): Promise<string[]> {
+  const infos: string[] = [];
+  await withWindow(
+    {
+      showWarningMessage: (async (_q: string, _o: unknown, button: string) => button) as WindowFn,
+      showInformationMessage: (async (m: string) => (infos.push(m), undefined)) as WindowFn,
+    },
+    async () => {
+      await vscode.commands.executeCommand('sddStudio.activatePower', id);
+    },
+  );
+  return infos;
+}
+
+describe('PowersService y comandos con MCP', () => {
+  beforeEach(async () => {
+    await restoreFixture();
+    const { powers } = await getApi();
+    powers.setFetcher(async () => JSON.stringify(catalog([power('alpha'), cloudy], FUTURE)));
+    await powers.refreshOnline();
+  });
+  afterEach(async () => {
+    const { powers } = await getApi();
+    await powers.resetCatalog();
+  });
+
+  it('activar, ver el modo, cambiarlo y desactivar', async () => {
+    const { powers } = await getApi();
+    assert.strictEqual(powers.policy().state, 'allowed');
+    assert.strictEqual(await powers.activate('cloudy', ws(), async () => true), 'activated');
+    let view = (await powers.views(ws())).find((v) => v.power.id === 'cloudy')!;
+    assert.deepStrictEqual([view.status, view.mode], ['active', 'readOnly']);
+    assert.strictEqual(await powers.setMode('cloudy', ws(), 'operate', never), 'changed');
+    view = (await powers.views(ws())).find((v) => v.power.id === 'cloudy')!;
+    assert.strictEqual(view.mode, 'operate');
+    assert.strictEqual((await powers.views(ws())).find((v) => v.power.id === 'alpha')!.mode, undefined);
+    assert.strictEqual(await powers.deactivate('cloudy', ws(), never), 'deactivated');
+  });
+
+  it('activar cancelado en la confirmación no cambia nada', async () => {
+    const { powers } = await getApi();
+    assert.strictEqual(await powers.activate('cloudy', ws(), async () => false), 'cancelled');
+    assert.deepStrictEqual(await powers.active(ws()), []);
+  });
+
+  it('sddStudio.setPowerMode en Solo lectura repara una entrada borrada (acción del diagnóstico)', async () => {
+    const { powers } = await getApi();
+    await powers.activate('cloudy', ws(), async () => true);
+    await writeWs('.vscode/mcp.json', '{ "servers": {} }');
+    await vscode.commands.executeCommand('sddStudio.setPowerMode', { id: 'cloudy', mode: 'readOnly' });
+    assert.match(await readWs('.vscode/mcp.json'), /"sdd-x"/);
+  });
+
+  it('update reenvía confirmMcp al instalador: cancelar deja todo como estaba', async () => {
+    const { powers } = await getApi();
+    await powers.activate('cloudy', ws(), async () => true);
+    const before = await readWs('.vscode/mcp.json');
+    const spec = mcpSpec();
+    const bumped = (s: McpStdioServer): McpStdioServer => ({ ...s, args: ['x-mcp-server@1.1.0'] });
+    const v2spec = mcpSpec({
+      servers: { 'sdd-x': bumped(spec.servers['sdd-x'] as McpStdioServer) },
+      operate: { ...spec.operate!, servers: { 'sdd-x': bumped(spec.operate!.servers['sdd-x'] as McpStdioServer) } },
+    });
+    const v2 = mcpPower('cloudy', v2spec, { 'SKILL.md': '---\nname: cloudy\ndescription: d\n---\nUse sdd-x, v2.\n' }, '1.1.0');
+    powers.setFetcher(async () => JSON.stringify(catalog([power('alpha'), v2], '2999-06-01T00:00:00.000Z')));
+    await powers.refreshOnline();
+    const asked: unknown[] = [];
+    assert.strictEqual(await powers.update('cloudy', ws(), never, async (mcp) => (asked.push(mcp), false)), 'cancelled');
+    assert.deepStrictEqual(asked, [v2spec]);
+    assert.strictEqual(await readWs('.vscode/mcp.json'), before);
+  });
+
+  describe('aviso de .gitignore al activar con el comando', () => {
+    let gitignore: string;
+    beforeEach(async () => {
+      gitignore = await readWs('.gitignore');
+    });
+    afterEach(async () => {
+      await writeWs('.gitignore', gitignore);
+    });
+
+    it('si .gitignore ignora .vscode/mcp.json, avisa en lugar de pedir el commit', async () => {
+      await writeWs('.gitignore', '.vscode/*\n');
+      const infos = await activateViaCommand('cloudy');
+      assert.strictEqual(infos.length, 1);
+      assert.match(infos[0], /añadió sdd-x a \.vscode\/mcp\.json/);
+      assert.ok(infos[0].includes('⚠️ .vscode/mcp.json está ignorado por git: añade `!.vscode/mcp.json` a .gitignore o tu equipo no recibirá los servidores.'));
+      assert.ok(!infos[0].includes('Commitea .github y .vscode/mcp.json'));
+    });
+
+    it('si no lo ignora, pide commitear .github y .vscode/mcp.json', async () => {
+      await writeWs('.gitignore', '.vscode/*\n!.vscode/mcp.json\n');
+      const infos = await activateViaCommand('cloudy');
+      assert.strictEqual(infos.length, 1);
+      assert.ok(infos[0].includes('Commitea .github y .vscode/mcp.json para compartirlo.'));
+      assert.ok(!infos[0].includes('⚠️'));
+    });
+  });
+
+  it('un MCP_FILE_INVALID no se convierte en otro error si no se puede abrir el archivo', async () => {
+    await writeWs('.vscode/mcp.json', '{ roto');
+    const errors: string[] = [];
+    let opened = 0;
+    await withWindow(
+      {
+        showWarningMessage: (async (_q: string, _o: unknown, button: string) => button) as WindowFn,
+        showErrorMessage: (async (m: string) => (errors.push(m), undefined)) as WindowFn,
+        showTextDocument: (async () => {
+          opened++;
+          throw new Error('no se puede abrir');
+        }) as WindowFn,
+      },
+      async () => {
+        await vscode.commands.executeCommand('sddStudio.activatePower', 'cloudy');
+      },
+    );
+    assert.strictEqual(opened, 1);
+    assert.strictEqual(errors.length, 1);
+    assert.match(errors[0], /^SDD Studio: /);
+  });
+
+  it('el comando sddStudio.setPowerMode está registrado', async () => {
+    assert.ok((await vscode.commands.getCommands(true)).includes('sddStudio.setPowerMode'));
+  });
+
+  it('la galería muestra el selector de modo y su mensaje setMode cambia el modo', async () => {
+    const { powers, gallery } = await getApi();
+    await powers.activate('cloudy', ws(), async () => true);
+    await vscode.commands.executeCommand('sddStudio.openPowers');
+    await gallery.render();
+    assert.match(gallery.html!, /data-action="setMode" data-id="cloudy" data-mode="operate"/);
+    assert.match(gallery.html!, /🔌 MCP/);
+    const modeOf = async () => (await powers.views(ws())).find((v) => v.power.id === 'cloudy')!.mode;
+    const original = vscode.window.showWarningMessage;
+    // Acepta el modal de Operar (devuelve el primer botón).
+    (vscode.window as { showWarningMessage: unknown }).showWarningMessage = async (_m: string, _o: unknown, button: string) => button;
+    try {
+      await gallery.handleMessage({ type: 'setMode', id: 'cloudy', mode: 'operate' });
+    } finally {
+      (vscode.window as { showWarningMessage: unknown }).showWarningMessage = original;
+    }
+    assert.strictEqual(await modeOf(), 'operate');
+    await gallery.handleMessage({ type: 'setMode', id: 'cloudy', mode: 'readOnly' });
+    assert.strictEqual(await modeOf(), 'readOnly');
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+  });
+});

@@ -75,6 +75,13 @@ describe('manifiesto', () => {
     }
   });
 
+  it('los agentes no listan herramientas de servidores MCP (plan B del spec §6.6)', () => {
+    for (const name of AGENTS) {
+      const tools = frontMatterFields(readFileSync(join(root, 'agents', `${name}.agent.md`), 'utf8')).get('tools')!;
+      expect(tools, name).not.toMatch(/'sdd-[a-z0-9-]+\/\*'/);
+    }
+  });
+
   it('registra los 5 prompt files y existen', () => {
     const paths: string[] = pkg.contributes.chatPromptFiles.map((p: { path: string }) => p.path);
     expect(paths.sort()).toEqual(

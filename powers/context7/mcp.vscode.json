@@ -1,0 +1,16 @@
+{
+  "prerequisites": [],
+  "inputs": [],
+  "servers": {
+    "sdd-context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  },
+  "approxTools": {
+    "sdd-context7": 2
+  },
+  "beta": false,
+  "credentials": "Ninguna (uso anónimo, con límite de peticiones)",
+  "example": "Usa Context7 para ver cómo se define un middleware en Next.js 15 y escribe el de autenticación, citando la doc."
+}

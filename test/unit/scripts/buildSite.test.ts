@@ -4,7 +4,7 @@ import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { buildSite, TEASER_MARKER } from '../../../scripts/build-site';
 import { validateCatalog } from '../../../src/powers/catalog';
-import { catalog, power } from '../../support/powerFixtures';
+import { catalog, mcpPower, power } from '../../support/powerFixtures';
 
 describe('buildSite', () => {
   it('genera landing con teaser, /powers con tarjetas, detalle y catálogo', () => {
@@ -33,5 +33,35 @@ describe('buildSite', () => {
 
     expect(validateCatalog(JSON.parse(readFileSync(join(outDir, 'powers', 'catalog.json'), 'utf8'))).ok).toBe(true);
     expect(existsSync(join(outDir, 'speccy.svg'))).toBe(true);
+  });
+  it('publica catalog-v2.json con todos y catalog.json (v1) sin los Powers MCP', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'site-'));
+    const outDir = join(tmp, '_site');
+    buildSite({ siteDir: join(tmp, 'no-site'), outDir, catalog: catalog([power('alpha'), mcpPower('cloudy')]) });
+    const v2 = JSON.parse(readFileSync(join(outDir, 'powers', 'catalog-v2.json'), 'utf8'));
+    const v1 = JSON.parse(readFileSync(join(outDir, 'powers', 'catalog.json'), 'utf8'));
+    expect(v2.schemaVersion).toBe(2);
+    expect(v2.powers.map((p: { id: string }) => p.id)).toEqual(['alpha', 'cloudy']);
+    expect(v1.schemaVersion).toBe(1);
+    expect(v1.powers.map((p: { id: string }) => p.id)).toEqual(['alpha']);
+    expect(validateCatalog(v1).ok).toBe(true);
+    expect(validateCatalog(v2).ok).toBe(true);
+  });
+
+  it('la página de un Power con MCP muestra distintivo, franja y "Cómo usarlo"; la de uno sin MCP no', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'site-'));
+    const outDir = join(tmp, '_site');
+    buildSite({ siteDir: join(tmp, 'no-site'), outDir, catalog: catalog([power('alpha'), mcpPower('cloudy')]) });
+    const detail = readFileSync(join(outDir, 'powers', 'cloudy.html'), 'utf8');
+    expect(detail).toContain('🔌 MCP');
+    expect(detail).toContain('SERVIDORES MCP');
+    expect(detail).toContain('Cómo usarlo');
+    expect(detail).toContain('Lista mis recursos');
+    expect(detail).toContain('<a href="https://docs.astral.sh/uv/getting-started/installation/">uv</a>');
+    expect(detail).toContain('cambia el modo a <b>Operar</b>');
+    expect(detail).toContain('&quot;sdd-x&quot;');
+    expect(detail).not.toContain('data-action="setMode"');
+    expect(readFileSync(join(outDir, 'powers', 'alpha.html'), 'utf8')).not.toContain('Cómo usarlo');
+    expect(readFileSync(join(outDir, 'powers', 'index.html'), 'utf8')).toContain('data-filter="mcp"');
   });
 });
