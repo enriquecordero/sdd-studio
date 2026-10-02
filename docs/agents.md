@@ -84,6 +84,10 @@ Las reglas están reescritas en español y resumidas; cuando un procedimiento es
 | Seguir los patrones existentes, sin proponer reestructuras | El steering describe, no rediseña | SP · brainstorming |
 | Vocabulario de dominio: sugerir el Power `domain-modeling`; glosario solo en `.github/instructions/` | Lenguaje común sin salir de la carpeta permitida | MP · domain-modeling |
 
+## Herramientas MCP (v0.5.0)
+
+Por precaución, los agentes `sdd-*` **no** listan herramientas MCP: todavía no comprobamos qué hace VS Code cuando un `.agent.md` nombra un servidor que no está instalado (spike pendiente, ver `docs/follow-ups.md`). Los Powers con MCP se usan desde el modo **Agent** normal de Copilot; su skill le dice cuándo y cómo usar cada servidor.
+
 ## Decisiones ante conflictos
 
 1. **Archivos.** Los agentes de fase (requisitos, diseño, tareas) solo escriben documentos de spec con `writeSpecDoc`; no crean ledgers, ADRs ni handoffs en archivos. Las decisiones y desviaciones van en el chat o en una sección del propio documento.

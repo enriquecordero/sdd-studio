@@ -588,6 +588,8 @@ Algunos Powers traen, además de su skill, **servidores MCP**: herramientas real
 
 > ⚠️ **Actualiza todo el equipo a v0.5.0.** Si alguien activa un Power MCP, el lock pasa a `schemaVersion 2` y v0.4.0 mostrará un error de formato (es a propósito: no sabría desactivar los servidores). La galería de v0.4.0 no ve los Powers MCP.
 
+> 🤖 Usa los Powers MCP desde el modo **Agent** normal de Copilot: los agentes `sdd-*` no los listan (detalle en [`docs/agents.md`](docs/agents.md)).
+
 ## 📦 Instalar
 
 ```bash

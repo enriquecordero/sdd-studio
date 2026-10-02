@@ -37,3 +37,14 @@ Hallazgos menores diferidos durante la implementación y la revisión final. Det
 - Task 14: README/checklist don't mention /grill-me and /poteto-mode are explicit-invocation Powers
 - Final: posible carrera que pierde una entrada del lockfile si se activan dos Powers muy seguidos
 - Final: en Windows con CRLF (git autocrlf) puede aparecer un aviso falso de "cambios locales" al actualizar o desactivar
+
+## Spike MCP pendiente (v0.5.0)
+
+Comprobaciones manuales todavía por hacer, con el valor por defecto que se usa hoy:
+
+1. Agentes con servidores ausentes: qué hace VS Code cuando un `.agent.md` nombra un servidor MCP no instalado. Hoy: variante B (los agentes no listan herramientas MCP).
+2. GitHub remoto + OAuth con Enterprise.
+3. Id del comando para listar servidores MCP. Hoy: `workbench.mcp.listServer` (provisional).
+4. Medir `approxTools`. Hoy: estimaciones.
+5. VS Code pide perfil/región una sola vez con AWS + AWS Solutions Architect activos.
+6. `REQUIRE_MUTATION_CONSENT` pide confirmación (elicitation).
