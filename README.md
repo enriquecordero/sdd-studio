@@ -488,6 +488,27 @@ Lista mis buckets de S3 en us-east-1 y dime cuáles no tienen activado el bloque
 </details>
 
 <details>
+<summary><b>🏛️ AWS Solutions Architect</b> (🔌 MCP) — Un arquitecto de AWS: requisitos, opciones, costo, diagrama e IaC</summary>
+
+**Cuándo usarlo:** para diseñar o revisar una arquitectura en AWS, estimar cuánto costaría o escribir y validar CDK/CloudFormation.
+
+**Cómo activarlo:** automático con "diseña una arquitectura para…", "¿cuánto costaría…?", "revisa este CDK/CloudFormation". Necesita `uv` y un perfil de AWS (Knowledge no usa credenciales); al iniciar los servidores, VS Code te pide perfil y región.
+
+**Ejemplo:**
+```text
+Diseña una arquitectura para una API REST con 2.000 peticiones/min en us-east-1, compárala con una opción serverless, estima el costo mensual y dame el diagrama Mermaid y el CDK.
+```
+
+**Qué hace el agente:**
+1. Aclara requisitos (carga, SLA, datos, cumplimiento, presupuesto, región) y te propone una respuesta para cada decisión.
+2. Compara 2–3 arquitecturas según los seis pilares de Well-Architected y recomienda una, citando la doc de AWS (`sdd-awsarch-knowledge`).
+3. Estima el costo mensual con sus supuestos (`sdd-awsarch-pricing`), dibuja el diagrama en Mermaid y escribe el CDK o CloudFormation validado (`sdd-awsarch-iac`).
+4. Si se lo pides, revisa el pilar de seguridad de tu cuenta (`sdd-awsarch-wa`) o mira qué hay desplegado (`sdd-awsarch-api`), siempre en solo lectura salvo en modo **Operar**.
+
+**Obtienes / Consejo:** un diseño defendible con costo y código. Comparte perfil y región con el Power `aws`, así que VS Code los pide una sola vez; si activas los dos, el diagnóstico avisa (`mcp-duplicate`) porque ambos incluyen el servidor aws-api: basta con uno.
+</details>
+
+<details>
 <summary><b>🔷 Azure</b> (🔌 MCP, beta) — Tu suscripción de Azure, en solo lectura por defecto</summary>
 
 **Cuándo usarlo:** para saber qué hay en un resource group o cómo está configurado un recurso.
@@ -514,7 +535,7 @@ Lista las cuentas de almacenamiento de mi suscripción y dime cuáles permiten a
 |---|---|---|
 | Antes del spec | `grill-me`, `prototype`, `research` | Estresar el plan, probar una duda de lógica o UI y reunir hechos citados de fuentes primarias antes de escribir requisitos |
 | Requisitos | `domain-modeling`, `github-mcp` | Fijar el vocabulario en `GLOSSARY.md` para que los requisitos usen términos consistentes; con `github-mcp`, partir del issue real |
-| Diseño | `codebase-design`, `domain-modeling`, `research`, `context7`, `microsoft-learn`, `aws-docs`, `aws`, `azure` | Interfaces y seams razonados, ADRs en `docs/adr/` y decisiones apoyadas en documentación oficial; doc vigente de librerías y nubes y el estado real de tu cuenta (solo lectura) |
+| Diseño | `codebase-design`, `domain-modeling`, `research`, `context7`, `microsoft-learn`, `aws-docs`, `aws`, `aws-architect`, `azure` | Interfaces y seams razonados, ADRs en `docs/adr/` y decisiones apoyadas en documentación oficial; doc vigente de librerías y nubes y el estado real de tu cuenta (solo lectura) |
 | Tareas | `tdd`, `codebase-design` | Definir de antemano qué seams se prueban y la forma de la interfaz de cada tarea |
 | Implementación | `tdd`, `systematic-debugging`, `verification`, `playwright-mcp` | Test primero en **▶ Ejecutar tarea**, causa raíz si algo falla y evidencia antes de marcar hecha; capturas del navegador en tareas de UI |
 | Cierre y review | `verification`, `code-review` | Comprobar que todo pasa y revisar la rama contra estándares y spec |
@@ -531,6 +552,7 @@ Algunos Powers traen, además de su skill, **servidores MCP**: herramientas real
 | 🎓 | [Microsoft Learn](https://enriquecordero.github.io/sdd-studio/powers/microsoft-learn.html) | `sdd-mslearn` | Remoto (Microsoft) | — | — | — |
 | 📙 | [AWS Docs](https://enriquecordero.github.io/sdd-studio/powers/aws-docs.html) | `sdd-awsdocs` | **Local** (`uvx`) | uv | — | — |
 | ☁️ | [AWS](https://enriquecordero.github.io/sdd-studio/powers/aws.html) | `sdd-aws` | **Local** (`uvx`) | uv, AWS CLI | Tu perfil de AWS (VS Code pide perfil y región) | Solo lectura · Operar opcional |
+| 🏛️ | [AWS Solutions Architect](https://enriquecordero.github.io/sdd-studio/powers/aws-architect.html) | `sdd-awsarch-knowledge`, `sdd-awsarch-pricing`, `sdd-awsarch-iac`, `sdd-awsarch-wa`, `sdd-awsarch-api` | Remoto (AWS) + **Local** (`uvx`) | uv, AWS CLI | Tu perfil de AWS (el mismo perfil y región que AWS); Knowledge sin credenciales | Solo lectura · Operar opcional (solo `sdd-awsarch-api`) |
 | 🔷 | [Azure](https://enriquecordero.github.io/sdd-studio/powers/azure.html) (beta) | `sdd-azure` | **Local** (`npx`) | Node.js, Azure CLI | `az login` | Solo lectura · Operar opcional |
 
 **Cómo activarlos**
@@ -539,7 +561,7 @@ Algunos Powers traen, además de su skill, **servidores MCP**: herramientas real
 3. VS Code te pedirá **confiar en el servidor e iniciarlo** (botón **Ver servidores MCP** en la notificación).
 4. Commitea `.github/` y `.vscode/mcp.json` para compartirlo con tu equipo.
 
-**Cómo cambiar a *Operar*** (GitHub, AWS y Azure): en la galería, en el Power activo, pulsa **Operar**. Antes verás un aviso con lo que implica (por ejemplo: *"Copilot podrá crear, modificar o borrar recursos de AWS con tus credenciales. Cada cambio pedirá confirmación."*). El modo vive en `.vscode/mcp.json`, así que **es del repo y se revisa en el PR**. Vuelve a **Solo lectura** con el mismo selector.
+**Cómo cambiar a *Operar*** (GitHub, AWS, AWS Solutions Architect y Azure): en la galería, en el Power activo, pulsa **Operar**. Antes verás un aviso con lo que implica (por ejemplo: *"Copilot podrá crear, modificar o borrar recursos de AWS con tus credenciales. Cada cambio pedirá confirmación."*). El modo vive en `.vscode/mcp.json`, así que **es del repo y se revisa en el PR**. Vuelve a **Solo lectura** con el mismo selector.
 
 **Ejemplos de prompt** (en Copilot Chat, modo Agent, con el Power activo):
 
@@ -551,16 +573,17 @@ Algunos Powers traen, además de su skill, **servidores MCP**: herramientas real
 | Microsoft Learn | `Busca en Microsoft Learn cómo dar acceso a Key Vault desde una Function con identidad administrada y escribe el Bicep, citando la doc.` |
 | AWS Docs | `Consulta la documentación de AWS sobre el tamaño máximo de un mensaje de SQS y ajusta el productor, citando la página.` |
 | AWS | `Lista mis buckets de S3 en us-east-1 y dime cuáles no tienen activado el bloqueo de acceso público.` |
+| AWS Solutions Architect | `Diseña una arquitectura para una API REST con 2.000 peticiones/min en us-east-1, compárala con una opción serverless, estima el costo mensual y dame el diagrama Mermaid y el CDK.` |
 | Azure | `Lista las cuentas de almacenamiento de mi suscripción y dime cuáles permiten acceso público a blobs.` |
 
 **Si tu organización bloquea MCP**
 - La galería muestra **🔒 Bloqueado por tu organización** en los Powers con MCP y **SDD Studio: Diagnóstico** explica la causa: `chat.mcp.access = none`, solo servidores del registro de la organización o la política *ChatStrictPluginOnlyCustomization*.
 - Si los servidores aparecen **deshabilitados** en VS Code, pide a tu admin de GitHub que active la política **"MCP servers in Copilot"** ([documentación](https://docs.github.com/en/copilot/concepts/mcp-management)).
-- El diagnóstico también avisa si falta un prerrequisito, si el workspace no es de confianza, si `.vscode/mcp.json` está en `.gitignore`, si falta un servidor (botón **Reparar**) o si los Powers activos suman más de ~100 herramientas (Copilot admite 128 por petición).
+- El diagnóstico también avisa si falta un prerrequisito, si el workspace no es de confianza, si `.vscode/mcp.json` está en `.gitignore`, si falta un servidor (botón **Reparar**), si dos Powers activos ejecutan el mismo servidor MCP (por ejemplo AWS y AWS Solutions Architect) o si los Powers activos suman más de ~100 herramientas (Copilot admite 128 por petición).
 
 > 🔐 **Seguridad**
-> - Los servidores **locales** (Playwright, AWS Docs, AWS, Azure) ejecutan código en tu máquina; VS Code pide confianza antes de iniciarlos y solo arrancan en workspaces de confianza.
-> - Las versiones están **fijadas** (`@playwright/mcp@0.0.83`, `awslabs.aws-documentation-mcp-server@1.2.2`, `awslabs.aws-api-mcp-server@1.5.6`, `@azure/mcp@3.0.0-beta.48`); nunca `@latest`.
+> - Los servidores **locales** (Playwright, AWS Docs, AWS, AWS Solutions Architect salvo Knowledge, Azure) ejecutan código en tu máquina; VS Code pide confianza antes de iniciarlos y solo arrancan en workspaces de confianza.
+> - Las versiones están **fijadas** (`@playwright/mcp@0.0.83`, `awslabs.aws-documentation-mcp-server@1.2.2`, `awslabs.aws-api-mcp-server@1.5.6`, `awslabs.aws-pricing-mcp-server@1.1.1`, `awslabs.aws-iac-mcp-server@1.0.26`, `awslabs.well-architected-security-mcp-server@0.2.0`, `@azure/mcp@3.0.0-beta.48`); nunca `@latest`.
 > - **Nunca se guarda un secreto en el repo:** GitHub usa el OAuth de VS Code; AWS pide perfil y región como `inputs`; Azure usa tu `az login`.
 
 > ⚠️ **Actualiza todo el equipo a v0.5.0.** Si alguien activa un Power MCP, el lock pasa a `schemaVersion 2` y v0.4.0 mostrará un error de formato (es a propósito: no sabría desactivar los servidores). La galería de v0.4.0 no ve los Powers MCP.
@@ -652,7 +675,7 @@ flowchart TB
     end
     AG -. usa .-> COP["GitHub Copilot (agent mode)"]
     COP -. llama .-> TOOLS
-    POW["powers/ (17 Powers)"] -->|build-catalog| CAT["dist/catalog.json"]
+    POW["powers/ (18 Powers)"] -->|build-catalog| CAT["dist/catalog.json"]
     CAT --> VSIX
     POW -->|build-site| SITE["GitHub Pages /powers"]
 ```

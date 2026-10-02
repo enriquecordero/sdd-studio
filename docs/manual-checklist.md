@@ -43,6 +43,7 @@ Abrir `examples/todo-app` en una ventana con el `.vsix` instalado y Copilot con 
 - [ ] Activar **AWS**: el aviso dice que ejecuta código local (`uvx awslabs.aws-api-mcp-server@1.5.6`) y avisa si falta `uv`; al iniciar, VS Code pide perfil y región.
 - [ ] Cambiar AWS a **Operar**: aparece el aviso; `.vscode/mcp.json` pasa a tener `REQUIRE_MUTATION_CONSENT` y no `READ_OPERATIONS_ONLY`; el selector resalta "Operar" en ámbar. Volver a **Solo lectura** lo revierte.
 - [ ] Editar a mano `sdd-aws` en `.vscode/mcp.json` y cambiar de modo → pregunta antes de sobrescribir.
+- [ ] Activar **AWS Solutions Architect**, iniciar sus servidores y pedir "Diseña una arquitectura para una API REST con 2.000 peticiones/min en us-east-1, compárala con una opción serverless, estima el costo mensual y dame el diagrama Mermaid y el CDK." → usa `sdd-awsarch-knowledge`, `sdd-awsarch-pricing` y `sdd-awsarch-iac` y dibuja el diagrama en Mermaid. Activar también **AWS** → VS Code no vuelve a pedir perfil y región, y el Diagnóstico muestra el aviso `mcp-duplicate` (`sdd-aws` y `sdd-awsarch-api`).
 - [ ] Con `"chat.mcp.access": "none"` en la configuración, la galería muestra "🔒 Bloqueado por tu organización" y el Diagnóstico da el error `mcp-policy`; los Powers sin MCP se siguen activando.
 - [ ] El Diagnóstico, con AWS y Azure activos y sin `az`, muestra `mcp-prereq-az` con el enlace de instalación, y la línea informativa de "MCP servers in Copilot".
 - [ ] Borrar `sdd-context7` de `.vscode/mcp.json` → el Diagnóstico ofrece **Reparar** y la entrada vuelve.

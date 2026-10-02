@@ -1,0 +1,52 @@
+{
+  "displayName": "AWS Solutions Architect",
+  "icon": "🏛️",
+  "category": "cloud",
+  "summary": "Un arquitecto de AWS en Copilot: aclara requisitos, compara arquitecturas, estima costos y entrega diagrama e IaC; solo lectura por defecto.",
+  "triggers": [
+    "\"diseña una arquitectura para…\"",
+    "\"¿cuánto costaría…?\"",
+    "\"revisa este CDK/CloudFormation\""
+  ],
+  "diagram": {
+    "kind": "steps",
+    "nodes": [
+      {
+        "label": "REQUISITOS",
+        "tone": "accent",
+        "edge": "propone 2-3 opciones"
+      },
+      {
+        "label": "OPCIONES",
+        "tone": "blue",
+        "edge": "estima con precios"
+      },
+      {
+        "label": "COSTO",
+        "tone": "warn",
+        "edge": "dibuja en Mermaid"
+      },
+      {
+        "label": "DISEÑO",
+        "tone": "blue",
+        "edge": "genera y valida"
+      },
+      {
+        "label": "IaC",
+        "tone": "green"
+      }
+    ]
+  },
+  "gets": [
+    "Opciones comparadas con su costo",
+    "Diagrama Mermaid del diseño",
+    "CDK o CloudFormation validado"
+  ],
+  "source": {
+    "repo": "enriquecordero/sdd-studio",
+    "path": "powers/aws-architect",
+    "commit": "main",
+    "author": "SDD Studio",
+    "license": "MIT"
+  }
+}

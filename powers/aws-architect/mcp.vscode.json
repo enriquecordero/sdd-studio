@@ -1,0 +1,145 @@
+{
+  "prerequisites": [
+    "uv",
+    "aws"
+  ],
+  "inputs": [
+    {
+      "id": "sdd_aws_profile",
+      "type": "promptString",
+      "description": "Perfil de AWS (aws configure / aws sso login)",
+      "default": "default"
+    },
+    {
+      "id": "sdd_aws_region",
+      "type": "promptString",
+      "description": "Región de AWS",
+      "default": "us-east-1"
+    }
+  ],
+  "servers": {
+    "sdd-awsarch-knowledge": {
+      "type": "http",
+      "url": "https://knowledge-mcp.global.api.aws"
+    },
+    "sdd-awsarch-pricing": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-pricing-mcp-server@1.1.1"
+      ],
+      "env": {
+        "AWS_PROFILE": "${input:sdd_aws_profile}",
+        "AWS_REGION": "${input:sdd_aws_region}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
+    "sdd-awsarch-iac": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-iac-mcp-server@1.0.26"
+      ],
+      "env": {
+        "AWS_PROFILE": "${input:sdd_aws_profile}",
+        "AWS_REGION": "${input:sdd_aws_region}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
+    "sdd-awsarch-wa": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.well-architected-security-mcp-server@0.2.0"
+      ],
+      "env": {
+        "AWS_PROFILE": "${input:sdd_aws_profile}",
+        "AWS_REGION": "${input:sdd_aws_region}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
+    "sdd-awsarch-api": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-api-mcp-server@1.5.6"
+      ],
+      "env": {
+        "AWS_REGION": "${input:sdd_aws_region}",
+        "AWS_API_MCP_PROFILE_NAME": "${input:sdd_aws_profile}",
+        "READ_OPERATIONS_ONLY": "true",
+        "AWS_API_MCP_ALLOW_UNRESTRICTED_LOCAL_FILE_ACCESS": "no-access",
+        "AWS_API_MCP_SUPPRESS_DEPRECATION_WARNING": "true"
+      }
+    }
+  },
+  "approxTools": {
+    "sdd-awsarch-knowledge": 5,
+    "sdd-awsarch-pricing": 9,
+    "sdd-awsarch-iac": 9,
+    "sdd-awsarch-wa": 6,
+    "sdd-awsarch-api": 3
+  },
+  "beta": false,
+  "credentials": "Tu perfil local de AWS (pricing, IaC, seguridad y API); VS Code pide perfil y región al iniciar. Knowledge no necesita credenciales.",
+  "example": "Diseña una arquitectura para una API REST con 2.000 peticiones/min en us-east-1, compárala con una opción serverless, estima el costo mensual y dame el diagrama Mermaid y el CDK.",
+  "operate": {
+    "servers": {
+      "sdd-awsarch-knowledge": {
+        "type": "http",
+        "url": "https://knowledge-mcp.global.api.aws"
+      },
+      "sdd-awsarch-pricing": {
+        "type": "stdio",
+        "command": "uvx",
+        "args": [
+          "awslabs.aws-pricing-mcp-server@1.1.1"
+        ],
+        "env": {
+          "AWS_PROFILE": "${input:sdd_aws_profile}",
+          "AWS_REGION": "${input:sdd_aws_region}",
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        }
+      },
+      "sdd-awsarch-iac": {
+        "type": "stdio",
+        "command": "uvx",
+        "args": [
+          "awslabs.aws-iac-mcp-server@1.0.26"
+        ],
+        "env": {
+          "AWS_PROFILE": "${input:sdd_aws_profile}",
+          "AWS_REGION": "${input:sdd_aws_region}",
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        }
+      },
+      "sdd-awsarch-wa": {
+        "type": "stdio",
+        "command": "uvx",
+        "args": [
+          "awslabs.well-architected-security-mcp-server@0.2.0"
+        ],
+        "env": {
+          "AWS_PROFILE": "${input:sdd_aws_profile}",
+          "AWS_REGION": "${input:sdd_aws_region}",
+          "FASTMCP_LOG_LEVEL": "ERROR"
+        }
+      },
+      "sdd-awsarch-api": {
+        "type": "stdio",
+        "command": "uvx",
+        "args": [
+          "awslabs.aws-api-mcp-server@1.5.6"
+        ],
+        "env": {
+          "AWS_REGION": "${input:sdd_aws_region}",
+          "AWS_API_MCP_PROFILE_NAME": "${input:sdd_aws_profile}",
+          "REQUIRE_MUTATION_CONSENT": "true",
+          "AWS_API_MCP_ALLOW_UNRESTRICTED_LOCAL_FILE_ACCESS": "no-access",
+          "AWS_API_MCP_SUPPRESS_DEPRECATION_WARNING": "true"
+        }
+      }
+    },
+    "warning": "Copilot podrá crear, modificar o borrar recursos de AWS con tus credenciales a través de sdd-awsarch-api. Cada cambio pedirá confirmación. Los demás servidores siguen siendo de solo lectura."
+  }
+}
